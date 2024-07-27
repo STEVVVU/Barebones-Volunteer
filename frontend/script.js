@@ -311,60 +311,59 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   const volunteerMatchingForm = document.getElementById('volunteer-matching-form');
-  volunteerMatchingForm.addEventListener('submit', function(event) {
+volunteerMatchingForm.addEventListener('submit', function(event) {
     event.preventDefault();
 
     const email = document.getElementById('volunteer-name').value;
     const eventId = document.getElementById('matched-event').value;
 
     fetch('http://localhost:3000/match-volunteer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, eventId })
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, eventId })
     })
     .then(response => response.text())
     .then(data => {
-      alert(data);
-      fetchVolunteerHistory(email); // Fetch volunteer history after matching
-      sendNotification(email, `You have been matched to the event: ${eventId}`);
-      location.reload(); // Refresh the page
+        alert(data);
+        fetchVolunteerHistory(email); // Fetch volunteer history after matching
+        fetchNotifications(email); // Fetch notifications after matching
     })
     .catch(error => {
-      console.error('Error:', error);
+        console.error('Error:', error);
     });
-  });
+});
 
   function fetchVolunteerHistory(email) {
     fetch(`http://localhost:3000/history/${email}`)
     .then(response => response.json())
     .then(history => {
-      const historyTableBody = document.querySelector('#history-table tbody');
-      historyTableBody.innerHTML = '';
-      if (history.length === 0) {
-        document.getElementById('empty-message').style.display = 'block';
-      } else {
-        document.getElementById('empty-message').style.display = 'none';
-        history.forEach(record => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${record.event_name}</td>
-            <td>${record.description}</td>
-            <td>${record.location}</td>
-            <td>${record.required_skills}</td>
-            <td>${record.urgency}</td>
-            <td>${formatDate(record.event_start_date)} to ${formatDate(record.event_end_date)}</td>
-            <td>${record.participation_status}</td>
-          `;
-          historyTableBody.appendChild(row);
-        });
-      }
+        const historyTableBody = document.querySelector('#history-table tbody');
+        historyTableBody.innerHTML = '';
+        if (history.length === 0) {
+            document.getElementById('empty-message').style.display = 'block';
+        } else {
+            document.getElementById('empty-message').style.display = 'none';
+            history.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.event_name}</td>
+                    <td>${record.description}</td>
+                    <td>${record.location}</td>
+                    <td>${record.required_skills}</td>
+                    <td>${record.urgency}</td>
+                    <td>${formatDate(record.event_start_date)} to ${formatDate(record.event_end_date)}</td>
+                    <td>${record.participation_status}</td>
+                `;
+                historyTableBody.appendChild(row);
+            });
+        }
     })
     .catch(error => {
-      console.error('Error fetching volunteer history:', error);
+        console.error('Error fetching volunteer history:', error);
     });
-  }
+}
 
   function fetchNotifications(email) {
     fetch(`http://localhost:3000/notifications/${email}`)
