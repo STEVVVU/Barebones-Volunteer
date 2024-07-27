@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showSection('profile');
         fetchProfile(email);
         fetchNotifications(email);
-        fetchVolunteerHistory(email); // Add this line to fetch volunteer history
+        fetchVolunteerHistory(email); // Fetch volunteer history after login
         fetchEvents(); // Fetch events after login
         fetchAdminEvents(); // Fetch admin events after login
         location.reload(); // Refresh the page
