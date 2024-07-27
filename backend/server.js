@@ -32,59 +32,82 @@ app.use((req, res, next) => {
     next();
 });
 
-// Registration endpoint
+// Registration endpoint with logging
 app.post('/register', (req, res) => {
     const { email, password } = req.body;
+    console.log('Registration request received:', { email, password });
+
+    if (!email || !password) {
+        console.error('Missing email or password in request.');
+        return res.status(400).send('Email and password are required.');
+    }
+
     const saltRounds = 10;
 
     bcrypt.hash(password, saltRounds, (err, hash) => {
         if (err) {
-            res.status(500).send('Server error.');
-        } else {
-            const query = 'INSERT INTO UserCredentials (email, password) VALUES (?, ?)';
-            db.query(query, [email, hash], (err, result) => {
-                if (err) {
-                    if (err.code === 'ER_DUP_ENTRY') {
-                        res.status(400).send('User already exists.');
-                    } else {
-                        res.status(500).send('Server error.');
-                    }
-                } else {
-                    res.status(201).send('User registered successfully.');
-                }
-            });
+            console.error('Hashing error:', err);
+            return res.status(500).send('Server error.');
         }
+
+        const query = 'INSERT INTO UserCredentials (email, password) VALUES (?, ?)';
+        db.query(query, [email, hash], (err, result) => {
+            if (err) {
+                console.error('Database error:', err);
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).send('User already exists.');
+                } else {
+                    return res.status(500).send('Server error.');
+                }
+            }
+
+            console.log('User registered successfully:', { email });
+            res.status(201).send('User registered successfully.');
+        });
     });
 });
 
 // Login endpoint
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
-    const query = 'SELECT password FROM UserCredentials WHERE email = ?';
+    console.log('Login request received:', { email });
 
+    const query = 'SELECT password FROM UserCredentials WHERE email = ?';
     db.query(query, [email], (err, results) => {
         if (err) {
-            res.status(500).send('Server error.');
-        } else if (results.length === 0) {
-            res.status(401).send('Invalid email or password.');
-        } else {
-            const hashedPassword = results[0].password;
-            bcrypt.compare(password, hashedPassword, (err, result) => {
-                if (result) {
-                    res.status(200).send('Login successful.');
-                } else {
-                    res.status(401).send('Invalid email or password.');
-                }
-            });
+            console.error('Database error:', err);
+            return res.status(500).send('Server error.');
         }
+
+        if (results.length === 0) {
+            console.error('Invalid email or password.');
+            return res.status(401).send('Invalid email or password.');
+        }
+
+        const hashedPassword = results[0].password;
+        bcrypt.compare(password, hashedPassword, (err, result) => {
+            if (err) {
+                console.error('Hash comparison error:', err);
+                return res.status(500).send('Server error.');
+            }
+
+            if (result) {
+                console.log('Login successful:', { email });
+                return res.status(200).send('Login successful.');
+            } else {
+                console.error('Invalid email or password.');
+                return res.status(401).send('Invalid email or password.');
+            }
+        });
     });
 });
 
 // Get user profile endpoint
 app.get('/profile/:email', (req, res) => {
     const { email } = req.params;
-    const query = 'SELECT * FROM UserProfile WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)';
+    console.log('Fetching profile for email:', email);
 
+    const query = 'SELECT * FROM UserProfile WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)';
     db.query(query, [email], (err, results) => {
         if (err) {
             console.error('Error fetching profile:', err);
@@ -114,6 +137,7 @@ app.get('/profile/:email', (req, res) => {
 app.put('/profile/:email', (req, res) => {
     const { email } = req.params;
     const profile = req.body;
+    console.log('Updating profile for email:', email, 'with data:', profile);
 
     const checkQuery = 'SELECT * FROM UserProfile WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)';
     db.query(checkQuery, [email], (err, results) => {
@@ -154,7 +178,6 @@ app.put('/profile/:email', (req, res) => {
 // Get all user logins endpoint
 app.get('/logins', (req, res) => {
     const query = 'SELECT email FROM UserCredentials';
-
     db.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching user logins:', err);
@@ -168,7 +191,6 @@ app.get('/logins', (req, res) => {
 // Get all users endpoint
 app.get('/users', (req, res) => {
     const query = 'SELECT email FROM UserCredentials';
-
     db.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching users:', err);
@@ -239,29 +261,105 @@ app.delete('/events/:id', (req, res) => {
 // Match volunteer to event endpoint
 app.post('/match-volunteer', (req, res) => {
     const { email, eventId } = req.body;
-    const query = `
-        INSERT INTO VolunteerHistory (user_id, event_id)
-        VALUES ((SELECT id FROM UserCredentials WHERE email = ?), ?)
-    `;
-    db.query(query, [email, eventId], (err, results) => {
+    const participationStatus = req.body.participationStatus || 'Assigned'; // Default to 'Assigned' if not provided
+
+    const getUserQuery = 'SELECT id FROM UserCredentials WHERE email = ?';
+    db.query(getUserQuery, [email], (err, userResults) => {
         if (err) {
-            console.error('Error matching volunteer:', err);
-            res.status(500).send('Server error.');
-        } else {
-            res.status(201).send('Volunteer matched successfully.');
+            console.error('Error fetching user ID:', err);
+            return res.status(500).send('Server error.');
         }
+
+        if (userResults.length === 0) {
+            return res.status(404).send('User not found.');
+        }
+
+        const userId = userResults[0].id;
+
+        // Check if the user is already matched to the event
+        const checkMatchQuery = 'SELECT * FROM VolunteerHistory WHERE user_id = ? AND event_id = ?';
+        db.query(checkMatchQuery, [userId, eventId], (err, matchResults) => {
+            if (err) {
+                console.error('Error checking existing match:', err);
+                return res.status(500).send('Server error.');
+            }
+
+            if (matchResults.length > 0) {
+                return res.status(400).send('User is already matched to this event.');
+            }
+
+            // Fetch event details
+            const eventQuery = 'SELECT * FROM EventDetails WHERE event_id = ?';
+            db.query(eventQuery, [eventId], (err, eventResults) => {
+                if (err) {
+                    console.error('Error fetching event details:', err);
+                    return res.status(500).send('Server error.');
+                }
+
+                if (eventResults.length === 0) {
+                    return res.status(404).send('Event not found.');
+                }
+
+                const event = eventResults[0];
+
+                // Insert volunteer history with event details
+                const insertQuery = `
+                    INSERT INTO VolunteerHistory 
+                    (user_id, event_id, participation_status, event_name, event_description, location, required_skills, urgency, event_start_date, event_end_date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
+                db.query(insertQuery, [userId, eventId, participationStatus, event.event_name, event.description, event.location, event.required_skills, event.urgency, event.event_start_date, event.event_end_date], (err, insertResults) => {
+                    if (err) {
+                        console.error('Error inserting volunteer history:', err);
+                        return res.status(500).send('Server error.');
+                    }
+
+                    // Create a notification for the user
+                    const notificationMessage = `You have been matched to the event "${event.event_name}".`;
+                    const notificationQuery = 'INSERT INTO Notifications (email, message) VALUES (?, ?)';
+                    db.query(notificationQuery, [email, notificationMessage], (err, notificationResults) => {
+                        if (err) {
+                            console.error('Error creating notification:', err);
+                            return res.status(500).send('Server error.');
+                        }
+
+                        const notificationId = notificationResults.insertId;
+                        const userNotificationQuery = 'INSERT INTO UserNotifications (user_id, notification_id) VALUES (?, ?)';
+                        db.query(userNotificationQuery, [userId, notificationId], (err, userNotificationResults) => {
+                            if (err) {
+                                console.error('Error creating user notification:', err);
+                                return res.status(500).send('Server error.');
+                            }
+
+                            return res.status(201).send('Volunteer matched and notified successfully.');
+                        });
+                    });
+                });
+            });
+        });
     });
 });
 
-// Endpoint to fetch volunteer history
+// Get volunteer history for a user
 app.get('/history/:email', (req, res) => {
     const { email } = req.params;
     const query = `
-        SELECT e.event_name, e.description AS eventDescription, e.location, e.required_skills AS requiredSkills,
-               e.urgency, e.event_start_date, e.event_end_date, v.status
-        FROM VolunteerHistory v
-        JOIN EventDetails e ON v.event_id = e.event_id
-        WHERE v.email = ?;
+        SELECT 
+            e.event_name,
+            e.description AS eventDescription,
+            e.location,
+            e.required_skills AS requiredSkills,
+            e.urgency,
+            CONCAT(e.event_start_date, ' to ', e.event_end_date) AS eventDate,
+            v.participation_status AS participationStatus
+        FROM 
+            VolunteerHistory v
+        JOIN 
+            EventDetails e ON v.event_id = e.event_id
+        JOIN
+            UserCredentials u ON v.user_id = u.id
+        WHERE 
+            u.email = ?;
     `;
     db.query(query, [email], (err, results) => {
         if (err) {
@@ -304,85 +402,64 @@ app.get('/notifications/:email', (req, res) => {
     });
 });
 
-// Mark notification as read
+// Endpoint to mark a notification as read
 app.put('/notifications/:email/:id', (req, res) => {
     const { email, id } = req.params;
-    const queryGetUserId = 'SELECT id FROM UserCredentials WHERE email = ?';
-    const queryMarkAsRead = `
-        INSERT INTO UserNotifications (user_id, notification_id, is_read)
-        VALUES ((SELECT id FROM UserCredentials WHERE email = ?), ?, TRUE)
-        ON DUPLICATE KEY UPDATE is_read = TRUE;
-    `;
+    const query = 'UPDATE usernotifications SET is_read = 1 WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?) AND notification_id = ?';
+    db.query(query, [email, id], (err, results) => {
+        if (err) {
+            console.error('Error marking notification as read:', err);
+            res.status(500).send('Server error.');
+        } else {
+            res.status(200).send('Notification marked as read.');
+        }
+    });
+});
 
-    db.query(queryGetUserId, [email], (err, userResults) => {
+// Fetch events a user is already matched to
+app.get('/user-matched-events/:email', (req, res) => {
+    const { email } = req.params;
+    const getUserQuery = 'SELECT id FROM UserCredentials WHERE email = ?';
+
+    db.query(getUserQuery, [email], (err, userResults) => {
         if (err) {
             console.error('Error fetching user ID:', err);
-            res.status(500).send('Server error.');
-        } else if (userResults.length === 0) {
-            console.log('User not found for email:', email);
-            res.status(404).send('User not found.');
-        } else {
-            const userId = userResults[0].id;
-            db.query(queryMarkAsRead, [email, id], (err, results) => {
-                if (err) {
-                    console.error('Error marking notification as read:', err);
-                    res.status(500).send('Server error.');
-                } else {
-                    res.status(200).send('Notification marked as read.');
-                }
-            });
+            return res.status(500).send('Server error.');
         }
+
+        if (userResults.length === 0) {
+            return res.status(404).send('User not found.');
+        }
+
+        const userId = userResults[0].id;
+
+        const matchedEventsQuery = 'SELECT event_id FROM VolunteerHistory WHERE user_id = ?';
+        db.query(matchedEventsQuery, [userId], (err, matchedEventsResults) => {
+            if (err) {
+                console.error('Error fetching matched events:', err);
+                return res.status(500).send('Server error.');
+            }
+
+            return res.status(200).json(matchedEventsResults);
+        });
     });
 });
 
-app.get('/matching-events/:email', (req, res) => {
-    const { email } = req.params;
-
-    const queryGetUserProfile = `
-        SELECT skills, availability_start, availability_end
-        FROM UserProfile
-        WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)
-    `;
-
-    db.query(queryGetUserProfile, [email], (err, userProfileResults) => {
+// Endpoint to delete a notification
+app.delete('/notifications/:id', (req, res) => {
+    const { id } = req.params;
+    console.log(`Attempting to delete notification with ID: ${id}`); // Log the notification ID
+    const query = 'DELETE FROM notifications WHERE id = ?';
+    db.query(query, [id], (err, results) => {
         if (err) {
-            console.error('Error fetching user profile:', err);
+            console.error('Error deleting notification:', err); // Log the error
             res.status(500).send('Server error.');
-        } else if (userProfileResults.length === 0) {
-            res.status(404).send('User profile not found.');
         } else {
-            const userSkills = userProfileResults[0].skills.split(',');
-            const userAvailabilityStart = new Date(userProfileResults[0].availability_start);
-            const userAvailabilityEnd = new Date(userProfileResults[0].availability_end);
-
-            const queryGetMatchingEvents = `
-                SELECT e.*
-                FROM EventDetails e
-                WHERE e.event_start_date <= ? AND e.event_end_date >= ?
-                AND EXISTS (
-                    SELECT 1
-                    FROM (
-                        SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(e.required_skills, ',', numbers.n), ',', -1)) AS skill
-                        FROM
-                        (SELECT 1 n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5) numbers
-                        WHERE numbers.n <= LENGTH(e.required_skills) - LENGTH(REPLACE(e.required_skills, ',', '')) + 1
-                    ) AS eventSkills
-                    WHERE eventSkills.skill IN (?)
-                )
-            `;
-
-            db.query(queryGetMatchingEvents, [userAvailabilityEnd, userAvailabilityStart, userSkills], (err, eventResults) => {
-                if (err) {
-                    console.error('Error fetching matching events:', err);
-                    res.status(500).send('Server error.');
-                } else {
-                    res.status(200).json(eventResults);
-                }
-            });
+            console.log(`Notification with ID: ${id} deleted successfully.`); // Log success
+            res.status(200).send('Notification deleted successfully.');
         }
     });
 });
-
 
 // Start the server
 app.listen(port, () => {

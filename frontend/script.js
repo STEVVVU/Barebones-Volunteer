@@ -348,84 +348,107 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function fetchVolunteerHistory(email) {
-      fetch(`http://localhost:3000/history/${email}`)
-      .then(response => response.json())
-      .then(history => {
-          const historyTableBody = document.querySelector('#history-table tbody');
-          historyTableBody.innerHTML = '';
-          if (history.length === 0) {
-              document.getElementById('empty-message').style.display = 'block';
-          } else {
-              document.getElementById('empty-message').style.display = 'none';
-              history.forEach(record => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                      <td>${record.eventName}</td>
-                      <td>${record.eventDescription || ''}</td>
-                      <td>${record.location || ''}</td>
-                      <td>${record.requiredSkills ? record.requiredSkills.join(', ') : ''}</td>
-                      <td>${record.urgency || ''}</td>
-                      <td>${record.dates.join(', ')}</td>
-                      <td>${record.status}</td>
-                  `;
-                  historyTableBody.appendChild(row);
-              });
-          }
-      })
-      .catch(error => {
-          console.error('Error fetching volunteer history:', error);
-      });
-  }
+    fetch(`http://localhost:3000/history/${email}`)
+    .then(response => response.json())
+    .then(history => {
+        const historyTableBody = document.querySelector('#history-table tbody');
+        historyTableBody.innerHTML = ''; // Clear the table body
+        if (history.length === 0) {
+            document.getElementById('empty-message').style.display = 'block';
+        } else {
+            document.getElementById('empty-message').style.display = 'none';
+            history.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.event_name}</td>
+                    <td>${record.eventDescription || ''}</td>
+                    <td>${record.location || ''}</td>
+                    <td>${record.requiredSkills || ''}</td>
+                    <td>${record.urgency || ''}</td>
+                    <td>${record.eventDate}</td>
+                    <td>${record.participationStatus}</td>
+                `;
+                historyTableBody.appendChild(row);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching volunteer history:', error);
+    });
+}
 
-  function fetchNotifications(email) {
-      fetch(`http://localhost:3000/notifications/${email}`)
-      .then(response => response.json())
-      .then(notifications => {
-          const notificationList = document.getElementById('notification-list');
-          const notificationIndicator = document.getElementById('notification-indicator');
-          notificationList.innerHTML = '';
-          if (notifications.length > 0) {
-              notificationIndicator.style.display = 'inline';
-          } else {
-              notificationIndicator.style.display = 'none';
-          }
-          notifications.forEach(notification => {
-              const notificationItem = document.createElement('div');
-              notificationItem.classList.add('notification-item');
-              notificationItem.innerHTML = `
-                  <span class="notification-message">${notification.message}</span>
-                  <button class="delete-notification" data-notification-id="${notification.id}">x</button>
-              `;
-              notificationList.appendChild(notificationItem);
-          });
+function fetchNotifications(email) {
+    fetch(`http://localhost:3000/notifications/${email}`)
+    .then(response => response.json())
+    .then(notifications => {
+        const notificationList = document.getElementById('notification-list');
+        const notificationIndicator = document.getElementById('notification-indicator');
+        notificationList.innerHTML = '';
+        if (notifications.length > 0) {
+            notificationIndicator.style.display = 'inline';
+        } else {
+            notificationIndicator.style.display = 'none';
+        }
+        notifications.forEach(notification => {
+            const notificationItem = document.createElement('div');
+            notificationItem.classList.add('notification-item');
+            notificationItem.innerHTML = `
+                <span class="notification-message">${notification.message}</span>
+                <button class="delete-notification" data-notification-id="${notification.id}" data-email="${notification.email}">x</button>
+            `;
+            notificationList.appendChild(notificationItem);
+        });
 
-          // Re-bind delete notification buttons
-          document.querySelectorAll('.delete-notification').forEach(button => {
-              button.addEventListener('click', function(event) {
-                  const notificationId = this.getAttribute('data-notification-id');
-                  const email = localStorage.getItem('email');
-                  markNotificationAsRead(email, notificationId);
-              });
-          });
-      })
-      .catch(error => {
-          console.error('Error fetching notifications:', error);
-      });
-  }
+        // Re-bind delete notification buttons
+        document.querySelectorAll('.delete-notification').forEach(button => {
+            button.addEventListener('click', function(event) {
+                const notificationId = this.getAttribute('data-notification-id');
+                const email = this.getAttribute('data-email');
+                console.log(`Notification ID: ${notificationId}, Email: ${email}`); // Log the email value
+                if (email !== '') {
+                    deleteNotification(notificationId);
+                } else {
+                    markNotificationAsRead(email, notificationId);
+                }
+            });
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching notifications:', error);
+    });
+}
 
-  function markNotificationAsRead(email, notificationId) {
-      fetch(`http://localhost:3000/notifications/${email}/${notificationId}`, {
-          method: 'PUT'
-      })
-      .then(response => response.text())
-      .then(data => {
-          alert(data);
-          location.reload(); // Refresh the page
-      })
-      .catch(error => {
-          console.error('Error:', error);
-      });
-  }
+function markNotificationAsRead(email, notificationId) {
+    fetch(`http://localhost:3000/notifications/${email}/${notificationId}`, {
+        method: 'PUT'
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log(`Marked as read: Notification ID: ${notificationId}, Email: ${email}`); // Log the action
+        alert(data);
+        location.reload(); // Refresh the page
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function deleteNotification(notificationId) {
+    console.log(`Attempting to delete notification with ID: ${notificationId}`); // Log the notification ID
+    fetch(`http://localhost:3000/notifications/${notificationId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log(`Deleted: Notification ID: ${notificationId}`); // Log the action
+        alert(data);
+        location.reload(); // Refresh the page
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
 
   function fetchAdminEvents() {
       fetch('http://localhost:3000/events')
@@ -498,24 +521,44 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.fetchMatchingEvents = function() {
-      const volunteerEmail = document.getElementById('volunteer-name').value;
+    const volunteerEmail = document.getElementById('volunteer-name').value;
 
-      fetch(`http://localhost:3000/matching-events/${volunteerEmail}`)
-      .then(response => response.json())
-      .then(events => {
-          const matchedEventSelect = document.getElementById('matched-event');
-          matchedEventSelect.innerHTML = '<option>Select Event</option>';
-          events.forEach(event => {
-              const option = document.createElement('option');
-              option.value = event.event_id;
-              option.textContent = event.event_name;
-              matchedEventSelect.appendChild(option);
-          });
-      })
-      .catch(error => {
-          console.error('Error fetching matching events:', error);
-      });
-  };
+    // Fetch events that match the volunteer's skills
+    fetch(`http://localhost:3000/matching-events/${volunteerEmail}`)
+    .then(response => response.json())
+    .then(events => {
+        const matchedEventSelect = document.getElementById('matched-event');
+        matchedEventSelect.innerHTML = '<option>Select Event</option>';
+        events.forEach(event => {
+            const option = document.createElement('option');
+            option.value = event.event_id;
+            option.textContent = event.event_name;
+            matchedEventSelect.appendChild(option);
+        });
+
+        // Fetch events the user is already matched to
+        fetch(`http://localhost:3000/user-matched-events/${volunteerEmail}`)
+        .then(response => response.json())
+        .then(matchedEvents => {
+            const alreadyMatchedEventIds = matchedEvents.map(event => event.event_id);
+
+            // Disable options for events the user is already matched to
+            Array.from(matchedEventSelect.options).forEach(option => {
+                if (alreadyMatchedEventIds.includes(parseInt(option.value))) {
+                    option.disabled = true;
+                    option.textContent += ' (Already Matched)';
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching user matched events:', error);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching matching events:', error);
+    });
+};
+
 
   // Fetch users and populate volunteer dropdown
   fetch('http://localhost:3000/users')

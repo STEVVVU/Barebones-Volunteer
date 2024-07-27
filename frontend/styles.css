@@ -122,17 +122,18 @@ button:hover {
 table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0 auto; /* Center the table */
+    margin: 20px 0; /* Add some margin to separate the table from other content */
 }
 
 th, td {
-    padding: 15px 20px;
+    padding: 15px 20px; /* Add padding for spacing */
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #ddd; /* Add a bottom border for row separation */
 }
 
 thead {
-    background: #f4f4f4;
+    background: #f4f4f4; /* Add a background color to the header */
+    font-weight: bold; /* Make the header text bold */
 }
 
 #selected-skills, #selected-required-skills, #selected-dates, #selected-event-dates {
@@ -176,6 +177,7 @@ thead {
     font-size: 1.2em;
     color: #666;
     margin-top: 20px;
+    text-align: center; /* Center the empty message */
 }
 
 #matched-event {
@@ -230,4 +232,28 @@ thead {
     font-size: 1.2em;
     color: red;
     vertical-align: middle;
+}
+
+/* Add responsive design */
+@media (max-width: 768px) {
+    #history-table th, #history-table td {
+        display: block;
+        text-align: right;
+    }
+
+    #history-table th::after, #history-table td::after {
+        content: ':';
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    #history-table th {
+        background-color: transparent;
+        text-align: left;
+    }
+
+    #history-table td {
+        padding: 10px 5px;
+        text-align: left;
+    }
 }

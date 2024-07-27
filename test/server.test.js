@@ -19,7 +19,7 @@ describe('User Endpoints', () => {
     const res = await request(app)
       .post('/register')
       .send({
-        email: 'test@example.com',
+        email: 'poopdaloop@example.com',
         password: 'password123'
       });
     expect(res.statusCode).toEqual(201);
@@ -161,14 +161,11 @@ describe('User Endpoints', () => {
         eventDates: ['2024-07-22 to 2024-07-23']
       });
 
-    console.log('Event creation response:', eventRes.body); // Log the entire response body
     const eventId = eventRes.body.id; // Ensure the ID is captured correctly
-    console.log('Event ID to delete:', eventId); // Log the event ID to ensure it is captured correctly
 
     // Then delete the event
     const res = await request(app)
       .delete(`/events/${eventId}`);
-    console.log('Delete response:', res.body); // Log the delete response
     expect(res.statusCode).toEqual(200);
     expect(res.text).toBe('Event deleted successfully.');
   });
@@ -193,16 +190,18 @@ describe('User Endpoints', () => {
 
   it('should delete a notification', async () => {
     // First create a notification
-    await request(app)
+    const notificationRes = await request(app)
       .post('/notifications')
       .send({
         email: 'deletenotification@example.com',
         message: 'This notification will be deleted'
       });
 
+    const notificationId = notificationRes.body.id; // Ensure the ID is captured correctly
+
     // Then delete the notification
     const res = await request(app)
-      .delete('/notifications/deletenotification@example.com/This notification will be deleted');
+      .delete(`/notifications/${notificationId}`);
     expect(res.statusCode).toEqual(200);
     expect(res.text).toBe('Notification deleted successfully.');
   });
@@ -286,8 +285,6 @@ describe('User Endpoints', () => {
       });
 
     const eventId = eventRes.body.id;
-    console.log('Event creation response:', eventRes.body); // Log the entire response body
-    console.log('Event ID for matching:', eventId); // Log the event ID to ensure it is captured correctly
 
     // Then match the volunteer to the event
     const res = await request(app)
@@ -297,10 +294,64 @@ describe('User Endpoints', () => {
         eventId: eventId
       });
 
-    console.log('Match volunteer response:', res.body); // Add this line to see the response body
-
-    expect(res.statusCode).toEqual(200);
+    expect(res.statusCode).toEqual(201);
     expect(res.text).toBe('Volunteer matched to event successfully.');
+  });
+
+  it('should not match a volunteer to the same event twice', async () => {
+    // Register and match a volunteer
+    await request(app)
+      .post('/register')
+      .send({
+        email: 'duplicatevolunteer@example.com',
+        password: 'password123'
+      });
+
+    await request(app)
+      .put('/profile/duplicatevolunteer@example.com')
+      .send({
+        profile: {
+          fullName: 'Duplicate Volunteer',
+          address1: '123 Main St',
+          city: 'Anytown',
+          state: 'CA',
+          zip: '12345',
+          skills: ['skill1', 'skill2'],
+          availability: ['2024-07-20 to 2024-07-21']
+        }
+      });
+
+    const eventRes = await request(app)
+      .post('/events')
+      .send({
+        name: 'Duplicate Event',
+        description: 'This event is for duplicate testing',
+        location: 'Duplicate Location',
+        requiredSkills: ['skill1'],
+        urgency: 'High',
+        eventDates: ['2024-07-20 to 2024-07-21']
+      });
+
+    const eventId = eventRes.body.id;
+
+    // First match
+    await request(app)
+      .post('/match-volunteer')
+      .send({
+        email: 'duplicatevolunteer@example.com',
+        eventId: eventId
+      });
+
+    // Attempt to match again
+    const duplicateMatchRes = await request(app)
+      .post('/match-volunteer')
+      .send({
+        email: 'duplicatevolunteer@example.com',
+        eventId: eventId
+      });
+
+    expect(duplicateMatchRes.statusCode).toEqual(400);
+    expect(duplicateMatchRes.text).toBe('User is already matched to this event.');
   });
 
   it('should get volunteer history for a user', async () => {
