@@ -194,27 +194,26 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(response => response.text())
       .then(data => {
-          alert(data);
-          if (data === "Login successful.") {
-              localStorage.setItem('email', email);
-              showSection('profile');
-              fetchProfile(email);
-              fetchNotifications(email);
-              fetchVolunteerHistory(email);
-              fetchEvents(); // Fetch events after login
-              fetchAdminEvents(); // Fetch admin events after login
-              location.reload(); // Refresh the page
-          }
-      })
+        alert(data);
+        if (data === "Login successful.") {
+            localStorage.setItem('email', email);
+            showSection('profile');
+            fetchProfile(email);
+            fetchNotifications(email);
+            fetchVolunteerHistory(email); // Fetch volunteer history after login
+            fetchEvents();
+            fetchAdminEvents();
+        }
+    })
       .catch(error => {
           console.error('Error:', error);
       });
   });
 
-  function formatDate(dateString) {
-      const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-      return new Date(dateString).toLocaleDateString('en-CA', options);
-  }
+ function formatDate(dateString) {
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    return new Date(dateString).toLocaleDateString('en-CA', options);
+}
 
   function fetchProfile(email) {
       fetch(`http://localhost:3000/profile/${email}`)
@@ -322,30 +321,29 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   });
 
-  const volunteerMatchingForm = document.getElementById('volunteer-matching-form');
-  volunteerMatchingForm.addEventListener('submit', function(event) {
-      event.preventDefault();
+const volunteerMatchingForm = document.getElementById('volunteer-matching-form');
+volunteerMatchingForm.addEventListener('submit', function(event) {
+    event.preventDefault();
 
-      const email = document.getElementById('volunteer-name').value;
-      const eventId = document.getElementById('matched-event').value;
+    const email = document.getElementById('volunteer-name').value;
+    const eventId = document.getElementById('matched-event').value;
 
-      fetch('http://localhost:3000/match-volunteer', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email, eventId })
-      })
-      .then(response => response.text())
-      .then(data => {
-          alert(data);
-          fetchVolunteerHistory(email); // Fetch volunteer history after matching
-          location.reload(); // Refresh the page
-      })
-      .catch(error => {
-          console.error('Error:', error);
-      });
-  });
+    fetch('http://localhost:3000/match-volunteer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, eventId })
+    })
+    .then(response => response.text())
+    .then(data => {
+        alert(data);
+        fetchVolunteerHistory(email); // Fetch volunteer history after matching
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
 
   function fetchVolunteerHistory(email) {
     fetch(`http://localhost:3000/history/${email}`)
