@@ -8,258 +8,141 @@
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav>
-        <ul>
-            <li><a href="#login" onclick="showSection('login')">Login</a></li>
-            <li><a href="#register" onclick="showSection('register')">Register</a></li>
-            <li><a href="#profile" onclick="showSection('profile')">Profile</a></li>
-            <li><a href="#event-management" onclick="showSection('event-management')">Event Management</a></li>
-            <li><a href="#events" onclick="showSection('events')">Events</a></li>
-            <li><a href="#volunteer-matching" onclick="showSection('volunteer-matching')">Volunteer Matching</a></li>
-            <li><a href="#history" onclick="showSection('history')">History</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Notifications <span id="notification-indicator" style="display:none;">🔴</span></a>
-                <div class="dropdown-content" id="notification-list">
-                    <!-- Notification items will be dynamically added here -->
-                </div>
-            </li>
-        </ul>
-    </nav>
+<nav>
+    <ul>
+        <li><a href="#login" onclick="showSection('login')">Login</a></li>
+        <li><a href="#register" onclick="showSection('register')">Register</a></li>
+        <li><a href="#profile" onclick="showSection('profile')">Profile</a></li>
+        <li><a href="#event-management" onclick="showSection('event-management')">Event Management</a></li>
+        <li><a href="#events" onclick="showSection('events')">Events</a></li>
+        <li><a href="#volunteer-matching" onclick="showSection('volunteer-matching')">Volunteer Matching</a></li>
+        <li><a href="#history" onclick="showSection('history')">History</a></li>
+        <li class="dropdown">
+            <a href="#" class="dropbtn">Notifications <span id="notification-indicator" style="display:none;">🔴</span></a>
+            <div id="notification-list" class="dropdown-content"></div>
+        </li>
+    </ul>
+</nav>
 
-    <!-- Sections -->
-    <section id="login" class="content-section">
-        <h1>Login</h1>
-        <form id="login-form">
-            <label for="login-email">Email:</label>
-            <input type="email" id="login-email" name="email" required>
-            <label for="login-password">Password:</label>
-            <input type="password" id="login-password" name="password" required>
-            <button type="submit">Login</button>
-        </form>
-    </section>
+<div id="login" class="section content-section">
+    <h1>Login</h1>
+    <form id="login-form">
+        <label for="login-email">Email:</label>
+        <input type="email" id="login-email" required>
+        <label for="login-password">Password:</label>
+        <input type="password" id="login-password" required>
+        <button type="submit">Login</button>
+    </form>
+</div>
 
-    <section id="register" class="content-section">
-        <h1>Register</h1>
-        <form id="register-form">
-            <label for="reg-email">Email:</label>
-            <input type="email" id="reg-email" name="email" required>
-            <label for="reg-password">Password:</label>
-            <input type="password" id="reg-password" name="password" required>
-            <button type="submit">Register</button>
-        </form>
-    </section>
+<div id="register" class="section content-section">
+    <h1>Register</h1>
+    <form id="register-form">
+        <label for="reg-email">Email:</label>
+        <input type="email" id="reg-email" required>
+        <label for="reg-password">Password:</label>
+        <input type="password" id="reg-password" required>
+        <button type="submit">Register</button>
+    </form>
+</div>
 
-    <section id="profile" class="content-section">
-        <h1>Profile Management</h1>
-        <form id="profile-form">
-            <label for="full-name">Full Name:</label>
-            <input type="text" id="full-name" name="full-name" maxlength="50" required>
+<div id="profile" class="section content-section">
+    <h1>Profile Management</h1>
+    <form id="profile-form">
+        <label for="full-name">Full Name:</label>
+        <input type="text" id="full-name">
+        <label for="address-1">Address 1:</label>
+        <input type="text" id="address-1">
+        <label for="address-2">Address 2:</label>
+        <input type="text" id="address-2">
+        <label for="city">City:</label>
+        <input type="text" id="city">
+        <label for="state">State:</label>
+        <select id="state">
+            <option value="Alabama">Alabama</option>
+            <option value="Alaska">Alaska</option>
+            <option value="Arizona">Arizona</option>
+            <option value="Arkansas">Arkansas</option>
+            <option value="California">California</option>
+            <!-- Add more states as needed -->
+        </select>
+        <label for="zip">Zip Code:</label>
+        <input type="text" id="zip">
+        <label for="skills">Skills:</label>
+        <select id="skills">
+            <option value="First Aid">First Aid</option>
+            <option value="CPR">CPR</option>
+            <option value="Event Planning">Event Planning</option>
+            <!-- Add more skills as needed -->
+        </select>
+        <div id="selected-skills"></div>
+        <label for="preferences">Preferences:</label>
+        <textarea id="preferences"></textarea>
+        <label for="availability-start">Availability Start Date:</label>
+        <input type="date" id="availability-start">
+        <label for="availability-end">Availability End Date:</label>
+        <input type="date" id="availability-end">
+        <button type="button" id="add-availability">Add Availability</button>
+        <div id="selected-dates"></div>
+        <button type="submit">Save Profile</button>
+    </form>
+</div>
 
-            <label for="address-1">Address 1:</label>
-            <input type="text" id="address-1" name="address-1" maxlength="100" required>
+<div id="event-management" class="section content-section">
+    <h1>Event Management</h1>
+    <form id="event-management-form">
+        <label for="event-name">Event Name:</label>
+        <input type="text" id="event-name" required>
+        <label for="event-description">Event Description:</label>
+        <textarea id="event-description" required></textarea>
+        <label for="location">Location:</label>
+        <input type="text" id="location" required>
+        <label for="required-skills">Required Skills:</label>
+        <select id="required-skills">
+            <option value="First Aid">First Aid</option>
+            <option value="CPR">CPR</option>
+            <option value="Event Planning">Event Planning</option>
+            <!-- Add more skills as needed -->
+        </select>
+        <div id="selected-required-skills"></div>
+        <label for="urgency">Urgency:</label>
+        <select id="urgency" required>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+        </select>
+        <label for="event-start-date">Event Start Date:</label>
+        <input type="date" id="event-start-date" required>
+        <label for="event-end-date">Event End Date:</label>
+        <input type="date" id="event-end-date" required>
+        <button type="button" id="add-event-date">Add Event Date</button>
+        <div id="selected-event-dates"></div>
+        <button type="submit">Create Event</button>
+    </form>
+    <div id="admin-events-container"></div>
+</div>
 
-            <label for="address-2">Address 2:</label>
-            <input type="text" id="address-2" name="address-2" maxlength="100">
+<div id="events" class="section content-section">
+    <h1>Events</h1>
+    <div id="events-container"></div>
+</div>
 
-            <label for="city">City:</label>
-            <input type="text" id="city" name="city" maxlength="100" required>
+<div id="volunteer-matching" class="section content-section">
+    <h1>Volunteer Matching</h1>
+    <form id="volunteer-matching-form">
+        <label for="volunteer-name">Volunteer Name:</label>
+        <select id="volunteer-name" required>
+            <option value="">Select User</option>
+        </select>
+        <label for="matched-event">Matched Event:</label>
+        <select id="matched-event" required>
+            <option value="">Select Event</option>
+        </select>
+        <button type="submit">Match Volunteer</button>
+    </form>
+</div>
 
-            <label for="state">State:</label>
-            <select id="state" name="state" required>
-                <!-- State options -->
-                <option value="AL">Alabama</option>
-                <option value="AK">Alaska</option>
-                <option value="AZ">Arizona</option>
-                <option value="AR">Arkansas</option>
-                <option value="CA">California</option>
-                <!-- Add all other states -->
-            </select>
-
-            <label for="zip">Zip Code:</label>
-            <input type="text" id="zip" name="zip" maxlength="9" required>
-
-            <label for="skills">Skills:</label>
-            <select id="skills" name="skills">
-                <!-- Skills options -->
-                <option value="first_aid">First Aid</option>
-                <option value="cpr">CPR</option>
-                <option value="event_planning">Event Planning</option>
-                <option value="public_speaking">Public Speaking</option>
-                <option value="data_entry">Data Entry</option>
-                <option value="social_media_management">Social Media Management</option>
-                <option value="cooking">Cooking</option>
-                <option value="fundraising">Fundraising</option>
-                <option value="childcare">Childcare</option>
-                <option value="tutoring">Tutoring</option>
-                <option value="transportation">Transportation</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="graphic_design">Graphic Design</option>
-                <option value="it_support">IT Support</option>
-                <option value="photography">Photography</option>
-                <option value="mentoring">Mentoring</option>
-                <option value="language_translation">Language Translation</option>
-                <option value="legal_advice">Legal Advice</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="counseling">Counseling</option>
-                <option value="marketing">Marketing</option>
-                <option value="administrative_support">Administrative Support</option>
-                <option value="event_coordination">Event Coordination</option>
-                <option value="volunteer_management">Volunteer Management</option>
-                <option value="community_outreach">Community Outreach</option>
-                <option value="environmental_cleanup">Environmental Cleanup</option>
-                <option value="elder_care">Elder Care</option>
-                <option value="youth_mentoring">Youth Mentoring</option>
-                <option value="disaster_relief">Disaster Relief</option>
-                <option value="animal_care">Animal Care</option>
-                <option value="teaching">Teaching</option>
-                <option value="writing">Writing</option>
-                <option value="editing">Editing</option>
-                <option value="public_relations">Public Relations</option>
-                <option value="logistics">Logistics</option>
-                <option value="project_management">Project Management</option>
-                <option value="research">Research</option>
-                <option value="survey_administration">Survey Administration</option>
-                <option value="food_service">Food Service</option>
-                <option value="event_setup">Event Setup</option>
-                <option value="traffic_control">Traffic Control</option>
-                <option value="medical_support">Medical Support</option>
-                <option value="security">Security</option>
-                <option value="registration">Registration</option>
-                <option value="hospitality">Hospitality</option>
-                <option value="customer_service">Customer Service</option>
-                <option value="donation_management">Donation Management</option>
-                <option value="phone_banking">Phone Banking</option>
-                <option value="translation">Translation</option>
-                <option value="sign_language">Sign Language</option>
-            </select>
-            <div id="selected-skills"></div>
-
-            <label for="preferences">Preferences:</label>
-            <textarea id="preferences" name="preferences"></textarea>
-
-            <label for="availability-start">Availability Start Date:</label>
-            <input type="date" id="availability-start" name="availability-start">
-
-            <label for="availability-end">Availability End Date:</label>
-            <input type="date" id="availability-end" name="availability-end">
-            <button type="button" id="add-availability">Add Availability</button>
-            <div id="selected-dates"></div>
-
-            <button type="submit">Save Profile</button>
-        </form>
-    </section>
-
-    <section id="event-management" class="content-section">
-        <h1>Event Management</h1>
-        <form id="event-management-form">
-            <label for="event-name">Event Name:</label>
-            <input type="text" id="event-name" name="event-name" maxlength="100" required>
-
-            <label for="event-description">Event Description:</label>
-            <textarea id="event-description" name="event-description" required></textarea>
-
-            <label for="location">Location:</label>
-            <textarea id="location" name="location" required></textarea>
-
-            <label for="required-skills">Required Skills:</label>
-            <select id="required-skills" name="required-skills">
-                <option value="first_aid">First Aid</option>
-                <option value="cpr">CPR</option>
-                <option value="event_planning">Event Planning</option>
-                <option value="public_speaking">Public Speaking</option>
-                <option value="data_entry">Data Entry</option>
-                <option value="social_media_management">Social Media Management</option>
-                <option value="cooking">Cooking</option>
-                <option value="fundraising">Fundraising</option>
-                <option value="childcare">Childcare</option>
-                <option value="tutoring">Tutoring</option>
-                <option value="transportation">Transportation</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="graphic_design">Graphic Design</option>
-                <option value="it_support">IT Support</option>
-                <option value="photography">Photography</option>
-                <option value="mentoring">Mentoring</option>
-                <option value="language_translation">Language Translation</option>
-                <option value="legal_advice">Legal Advice</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="counseling">Counseling</option>
-                <option value="marketing">Marketing</option>
-                <option value="administrative_support">Administrative Support</option>
-                <option value="event_coordination">Event Coordination</option>
-                <option value="volunteer_management">Volunteer Management</option>
-                <option value="community_outreach">Community Outreach</option>
-                <option value="environmental_cleanup">Environmental Cleanup</option>
-                <option value="elder_care">Elder Care</option>
-                <option value="youth_mentoring">Youth Mentoring</option>
-                <option value="disaster_relief">Disaster Relief</option>
-                <option value="animal_care">Animal Care</option>
-                <option value="teaching">Teaching</option>
-                <option value="writing">Writing</option>
-                <option value="editing">Editing</option>
-                <option value="public_relations">Public Relations</option>
-                <option value="logistics">Logistics</option>
-                <option value="project_management">Project Management</option>
-                <option value="research">Research</option>
-                <option value="survey_administration">Survey Administration</option>
-                <option value="food_service">Food Service</option>
-                <option value="event_setup">Event Setup</option>
-                <option value="traffic_control">Traffic Control</option>
-                <option value="medical_support">Medical Support</option>
-                <option value="security">Security</option>
-                <option value="registration">Registration</option>
-                <option value="hospitality">Hospitality</option>
-                <option value="customer_service">Customer Service</option>
-                <option value="donation_management">Donation Management</option>
-                <option value="phone_banking">Phone Banking</option>
-                <option value="translation">Translation</option>
-                <option value="sign_language">Sign Language</option>
-            </select>
-            <div id="selected-required-skills"></div>
-
-            <label for="urgency">Urgency:</label>
-            <select id="urgency" name="urgency" required>
-                <option value="low-urgency">Low</option>
-                <option value="medium-urgency">Medium</option>
-                <option value="high-urgency">High</option>
-            </select>
-
-            <label for="event-start-date">Event Start Date:</label>
-            <input type="date" id="event-start-date" name="event-start-date">
-
-            <label for="event-end-date">Event End Date:</label>
-            <input type="date" id="event-end-date" name="event-end-date">
-            <button type="button" id="add-event-date">Add Event Date</button>
-            <div id="selected-event-dates"></div>
-
-            <button type="submit">Create Event</button>
-        </form>
-        <div id="admin-events-container"></div>
-    </section>
-
-    <section id="events" class="content-section">
-        <h1>Events</h1>
-        <div id="events-container"></div>
-    </section>
-
-    <section id="volunteer-matching" class="content-section">
-        <h1>Volunteer Matching</h1>
-        <form id="volunteer-matching-form">
-            <label for="volunteer-name">Volunteer Name:</label>
-            <select id="volunteer-name" name="volunteer-name" onchange="fetchMatchingEvents()">
-                <option value="">Select User</option>
-            </select>
-    
-            <label for="matched-event">Matched Event:</label>
-            <select id="matched-event" name="matched-event">
-                <!-- Event options will be dynamically added here -->
-            </select>
-    
-            <button type="submit">Match Volunteer</button>
-        </form>
-    </section>
-    
-    
-<section id="history" class="content-section">
+<div id="history" class="section content-section">
     <h1>Volunteer History</h1>
     <table id="history-table">
         <thead>
@@ -278,7 +161,7 @@
         </tbody>
     </table>
     <p id="empty-message" style="display: none;">Volunteer History Is Empty</p>
-</section>
+</div>
 
     <script src="script.js"></script>
 </body>
