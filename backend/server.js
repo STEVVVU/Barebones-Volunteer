@@ -32,45 +32,29 @@ app.use((req, res, next) => {
     next();
 });
 
-app.post('/register', async (req, res) => {
-  try {
+// Registration endpoint
+app.post('/register', (req, res) => {
     const { email, password } = req.body;
+    const saltRounds = 10;
 
-    if (!email || !password) {
-      return res.status(400).send('Email and password are required.');
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const query = 'INSERT INTO usercredentials (email, password) VALUES (?, ?)';
-    connection.query(query, [email, hashedPassword], (err, result) => {
-      if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(400).send('User already exists.');
-        }
-        throw err;
-      }
-
-      const userId = result.insertId;
-
-      const profileQuery = `
-        INSERT INTO userprofile (
-          user_id, full_name, address, address2, city, state, zipcode, skills, preferences, availability_start, availability_end
-        ) VALUES (?, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-      `;
-      connection.query(profileQuery, [userId], (err, result) => {
+    bcrypt.hash(password, saltRounds, (err, hash) => {
         if (err) {
-          console.error('Error inserting profile:', err);
-          return res.status(500).send('Error inserting profile.');
+            res.status(500).send('Server error.');
+        } else {
+            const query = 'INSERT INTO UserCredentials (email, password) VALUES (?, ?)';
+            db.query(query, [email, hash], (err, result) => {
+                if (err) {
+                    if (err.code === 'ER_DUP_ENTRY') {
+                        res.status(400).send('User already exists.');
+                    } else {
+                        res.status(500).send('Server error.');
+                    }
+                } else {
+                    res.status(201).send('User registered successfully.');
+                }
+            });
         }
-
-        res.status(201).send('User registered successfully.');
-      });
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Registration failed.');
-  }
 });
 
 // Login endpoint
@@ -167,36 +151,32 @@ app.put('/profile/:email', (req, res) => {
     });
 });
 
-// Login endpoint
-app.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+// Get all user logins endpoint
+app.get('/logins', (req, res) => {
+    const query = 'SELECT email FROM UserCredentials';
 
-    if (!email || !password) {
-      return res.status(400).send('Email and password are required.');
-    }
-
-    const query = 'SELECT * FROM usercredentials WHERE email = ?';
-    connection.query(query, [email], async (err, results) => {
-      if (err) throw err;
-
-      if (results.length === 0) {
-        return res.status(401).send('Invalid email or password.');
-      }
-
-      const user = results[0];
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordValid) {
-        return res.status(401).send('Invalid email or password.');
-      }
-
-      res.status(200).send('Login successful.');
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching user logins:', err);
+            res.status(500).send('Server error.');
+        } else {
+            res.status(200).json(results);
+        }
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Login failed.');
-  }
+});
+
+// Get all users endpoint
+app.get('/users', (req, res) => {
+    const query = 'SELECT email FROM UserCredentials';
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching users:', err);
+            res.status(500).send('Server error.');
+        } else {
+            res.status(200).json(results);
+        }
+    });
 });
 
 // Create an event endpoint
@@ -268,40 +248,29 @@ app.post('/match-volunteer', (req, res) => {
             console.error('Error matching volunteer:', err);
             res.status(500).send('Server error.');
         } else {
-            // Create a notification for the matched volunteer
-            const notificationQuery = `INSERT INTO Notifications (email, message) VALUES (?, ?)`;
-            const message = `You have been matched to event ID: ${eventId}`;
-            db.query(notificationQuery, [email, message], (err, results) => {
-                if (err) {
-                    console.error('Error creating notification:', err);
-                    res.status(500).send('Server error.');
-                } else {
-                    res.status(201).send('Volunteer matched successfully and notification sent.');
-                }
-            });
+            res.status(201).send('Volunteer matched successfully.');
         }
     });
 });
 
-// Fetch volunteer history
+// Endpoint to fetch volunteer history
 app.get('/history/:email', (req, res) => {
-  const { email } = req.params;
-
-  const query = `
-    SELECT vh.id, vh.participation_status, ed.event_name, ed.description, ed.location, ed.required_skills, ed.urgency, ed.event_start_date, ed.event_end_date 
-    FROM volunteerhistory vh 
-    JOIN usercredentials uc ON vh.user_id = uc.id 
-    JOIN eventdetails ed ON vh.event_id = ed.event_id 
-    WHERE uc.email = ?;
-  `;
-  connection.query(query, [email], (err, results) => {
-    if (err) {
-      console.error('Error fetching volunteer history:', err);
-      return res.status(500).send('Error fetching volunteer history.');
-    }
-
-    res.status(200).json(results);
-  });
+    const { email } = req.params;
+    const query = `
+        SELECT e.event_name, e.description AS eventDescription, e.location, e.required_skills AS requiredSkills,
+               e.urgency, e.event_start_date, e.event_end_date, v.status
+        FROM VolunteerHistory v
+        JOIN EventDetails e ON v.event_id = e.event_id
+        WHERE v.email = ?;
+    `;
+    db.query(query, [email], (err, results) => {
+        if (err) {
+            console.error('Error fetching volunteer history:', err);
+            res.status(500).send('Server error.');
+        } else {
+            res.status(200).json(results);
+        }
+    });
 });
 
 // Fetch unread notifications for a user
