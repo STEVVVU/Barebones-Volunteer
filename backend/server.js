@@ -268,7 +268,17 @@ app.post('/match-volunteer', (req, res) => {
             console.error('Error matching volunteer:', err);
             res.status(500).send('Server error.');
         } else {
-            res.status(201).send('Volunteer matched successfully.');
+            // Create a notification for the matched volunteer
+            const notificationQuery = `INSERT INTO Notifications (email, message) VALUES (?, ?)`;
+            const message = `You have been matched to event ID: ${eventId}`;
+            db.query(notificationQuery, [email, message], (err, results) => {
+                if (err) {
+                    console.error('Error creating notification:', err);
+                    res.status(500).send('Server error.');
+                } else {
+                    res.status(201).send('Volunteer matched successfully and notification sent.');
+                }
+            });
         }
     });
 });
