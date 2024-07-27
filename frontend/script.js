@@ -348,34 +348,55 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function fetchVolunteerHistory(email) {
-      fetch(`http://localhost:3000/history/${email}`)
-      .then(response => response.json())
-      .then(history => {
-          const historyTableBody = document.querySelector('#history-table tbody');
-          historyTableBody.innerHTML = '';
-          if (history.length === 0) {
-              document.getElementById('empty-message').style.display = 'block';
-          } else {
-              document.getElementById('empty-message').style.display = 'none';
-              history.forEach(record => {
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                      <td>${record.eventName}</td>
-                      <td>${record.eventDescription || ''}</td>
-                      <td>${record.location || ''}</td>
-                      <td>${record.requiredSkills ? record.requiredSkills.join(', ') : ''}</td>
-                      <td>${record.urgency || ''}</td>
-                      <td>${record.dates.join(', ')}</td>
-                      <td>${record.status}</td>
-                  `;
-                  historyTableBody.appendChild(row);
-              });
-          }
-      })
-      .catch(error => {
-          console.error('Error fetching volunteer history:', error);
-      });
-  }
+    fetch(`http://localhost:3000/history/${email}`)
+    .then(response => response.json())
+    .then(history => {
+        const historyContent = document.getElementById('history-content');
+        if (history.length === 0) {
+            historyContent.innerHTML = 'Volunteer History Is Empty';
+        } else {
+            let tableHTML = `
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Event Name</th>
+                            <th>Event Description</th>
+                            <th>Location</th>
+                            <th>Required Skills</th>
+                            <th>Urgency</th>
+                            <th>Event Date</th>
+                            <th>Participation Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            history.forEach(record => {
+                tableHTML += `
+                    <tr>
+                        <td>${record.event_name || ''}</td>
+                        <td>${record.eventDescription || ''}</td>
+                        <td>${record.location || ''}</td>
+                        <td>${record.requiredSkills || ''}</td>
+                        <td>${record.urgency || ''}</td>
+                        <td>${record.event_start_date ? formatDate(record.event_start_date) : ''} to ${record.event_end_date ? formatDate(record.event_end_date) : ''}</td>
+                        <td>${record.status || ''}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            historyContent.innerHTML = tableHTML;
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching volunteer history:', error);
+    });
+}
 
   function fetchNotifications(email) {
       fetch(`http://localhost:3000/notifications/${email}`)
