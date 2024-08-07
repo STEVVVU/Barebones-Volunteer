@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/report/pdf', async (req, res) => {
   try {
     db.query(`
-      SELECT u.email as volunteerName, e.event_name as eventName, v.date
+      SELECT u.email as volunteerName, e.event_name as eventName, v.participation_date as date
       FROM usercredentials u
       JOIN volunteerhistory v ON u.id = v.user_id
       JOIN eventdetails e ON v.event_id = e.event_id
@@ -54,7 +54,7 @@ router.get('/report/pdf', async (req, res) => {
 router.get('/report/csv', async (req, res) => {
   try {
     db.query(`
-      SELECT u.email as volunteerName, e.event_name as eventName, v.date
+      SELECT u.email as volunteerName, e.event_name as eventName, v.participation_date as date
       FROM usercredentials u
       JOIN volunteerhistory v ON u.id = v.user_id
       JOIN eventdetails e ON v.event_id = e.event_id
