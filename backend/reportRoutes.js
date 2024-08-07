@@ -19,6 +19,13 @@ router.get('/report/pdf', async (req, res) => {
         return res.status(500).send('Error generating PDF report');
       }
 
+      console.log("Query results:", results); // Log the query results
+
+      if (results.length === 0) {
+        console.log("No data found for the PDF report");
+        return res.status(404).send('No data found for the PDF report');
+      }
+
       try {
         const pdfDoc = await PDFDocument.create();
         const page = pdfDoc.addPage();
@@ -62,6 +69,13 @@ router.get('/report/csv', async (req, res) => {
       if (error) {
         console.error("Database query error:", error);
         return res.status(500).send('Error generating CSV report');
+      }
+
+      console.log("Query results:", results); // Log the query results
+
+      if (results.length === 0) {
+        console.log("No data found for the CSV report");
+        return res.status(404).send('No data found for the CSV report');
       }
 
       try {
