@@ -1,7 +1,7 @@
 const express = require('express');
 const { PDFDocument } = require('pdf-lib');
 const { createObjectCsvWriter } = require('csv-writer');
-const db = require('./db'); // Path to db.js
+const db = require('./db'); // Ensure this path is correct
 
 const router = express.Router();
 
@@ -15,32 +15,37 @@ router.get('/report/pdf', async (req, res) => {
       JOIN eventdetails e ON v.event_id = e.event_id
     `, async (error, results) => {
       if (error) {
-        console.error(error);
+        console.error("Database query error:", error);
         return res.status(500).send('Error generating PDF report');
       }
 
-      const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage();
-      const { width, height } = page.getSize();
-      let y = height - 40;
+      try {
+        const pdfDoc = await PDFDocument.create();
+        const page = pdfDoc.addPage();
+        const { width, height } = page.getSize();
+        let y = height - 40;
 
-      page.drawText('Volunteer Report', { x: 30, y, size: 20 });
-      y -= 20;
-
-      results.forEach(volunteer => {
-        page.drawText(`Volunteer: ${volunteer.volunteerName}`, { x: 30, y, size: 15 });
+        page.drawText('Volunteer Report', { x: 30, y, size: 20 });
         y -= 20;
-        page.drawText(`Event: ${volunteer.eventName}, Date: ${volunteer.date}`, { x: 50, y, size: 12 });
-        y -= 15;
-      });
 
-      const pdfBytes = await pdfDoc.save();
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.pdf');
-      res.send(Buffer.from(pdfBytes));
+        results.forEach(volunteer => {
+          page.drawText(`Volunteer: ${volunteer.volunteerName}`, { x: 30, y, size: 15 });
+          y -= 20;
+          page.drawText(`Event: ${volunteer.eventName}, Date: ${volunteer.date}`, { x: 50, y, size: 12 });
+          y -= 15;
+        });
+
+        const pdfBytes = await pdfDoc.save();
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.pdf');
+        res.send(Buffer.from(pdfBytes));
+      } catch (pdfError) {
+        console.error("PDF generation error:", pdfError);
+        return res.status(500).send('Error generating PDF report');
+      }
     });
   } catch (error) {
-    console.error(error);
+    console.error("Unexpected error:", error);
     res.status(500).send('Error generating PDF report');
   }
 });
@@ -55,35 +60,40 @@ router.get('/report/csv', async (req, res) => {
       JOIN eventdetails e ON v.event_id = e.event_id
     `, (error, results) => {
       if (error) {
-        console.error(error);
+        console.error("Database query error:", error);
         return res.status(500).send('Error generating CSV report');
       }
 
-      const data = results.map(volunteer => ({
-        Volunteer: volunteer.volunteerName,
-        Event: volunteer.eventName,
-        Date: volunteer.date
-      }));
+      try {
+        const data = results.map(volunteer => ({
+          Volunteer: volunteer.volunteerName,
+          Event: volunteer.eventName,
+          Date: volunteer.date
+        }));
 
-      const csvWriter = createObjectCsvWriter({
-        path: 'volunteer_report.csv',
-        header: [
-          { id: 'Volunteer', title: 'Volunteer' },
-          { id: 'Event', title: 'Event' },
-          { id: 'Date', title: 'Date' }
-        ]
-      });
-
-      csvWriter.writeRecords(data).then(() => {
-        res.download('volunteer_report.csv', 'volunteer_report.csv', err => {
-          if (err) {
-            console.error(err);
-          }
+        const csvWriter = createObjectCsvWriter({
+          path: 'volunteer_report.csv',
+          header: [
+            { id: 'Volunteer', title: 'Volunteer' },
+            { id: 'Event', title: 'Event' },
+            { id: 'Date', title: 'Date' }
+          ]
         });
-      });
+
+        csvWriter.writeRecords(data).then(() => {
+          res.download('volunteer_report.csv', 'volunteer_report.csv', err => {
+            if (err) {
+              console.error("CSV download error:", err);
+            }
+          });
+        });
+      } catch (csvError) {
+        console.error("CSV generation error:", csvError);
+        return res.status(500).send('Error generating CSV report');
+      }
     });
   } catch (error) {
-    console.error(error);
+    console.error("Unexpected error:", error);
     res.status(500).send('Error generating CSV report');
   }
 });
