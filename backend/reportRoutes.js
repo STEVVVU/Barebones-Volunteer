@@ -8,6 +8,7 @@ const router = express.Router();
 // Route to generate PDF report
 router.get('/report/pdf', async (req, res) => {
   try {
+    console.log("Starting PDF generation process");
     db.query(`
       SELECT u.email as volunteerName, e.event_name as eventName, v.participation_date as date
       FROM usercredentials u
@@ -36,6 +37,7 @@ router.get('/report/pdf', async (req, res) => {
         y -= 20;
 
         results.forEach(volunteer => {
+          console.log(`Adding volunteer: ${volunteer.volunteerName}`);
           page.drawText(`Volunteer: ${volunteer.volunteerName}`, { x: 30, y, size: 15 });
           y -= 20;
           page.drawText(`Event: ${volunteer.eventName}, Date: ${volunteer.date}`, { x: 50, y, size: 12 });
@@ -60,6 +62,7 @@ router.get('/report/pdf', async (req, res) => {
 // Route to generate CSV report
 router.get('/report/csv', async (req, res) => {
   try {
+    console.log("Starting CSV generation process");
     db.query(`
       SELECT u.email as volunteerName, e.event_name as eventName, v.participation_date as date
       FROM usercredentials u
