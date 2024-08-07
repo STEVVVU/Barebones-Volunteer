@@ -3,12 +3,14 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const mysql = require('mysql');
+const reportRoutes = require('./reportRoutes');
 
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use('/api', reportRoutes);
 
 // Create a connection to the database
 const db = mysql.createConnection({
