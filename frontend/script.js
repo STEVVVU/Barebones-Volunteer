@@ -403,9 +403,9 @@ function fetchNotifications(email) {
         document.querySelectorAll('.delete-notification').forEach(button => {
             button.addEventListener('click', function(event) {
                 const notificationId = this.getAttribute('data-notification-id');
-                const email = this.getAttribute('data-email');
+                const notificationemail = this.getAttribute('data-email');
                 console.log(`Notification ID: ${notificationId}, Email: ${email}`); // Log the email value
-                if (email !== '') {
+                if (notificationemail !== '') {
                     deleteNotification(notificationId);
                 } else {
                     markNotificationAsRead(email, notificationId);
@@ -419,19 +419,30 @@ function fetchNotifications(email) {
 }
 
 function markNotificationAsRead(email, notificationId) {
-    fetch(`http://localhost:3000/notifications/${email}/${notificationId}`, {
-        method: 'PUT'
-    })
-    .then(response => response.text())
-    .then(data => {
-        console.log(`Marked as read: Notification ID: ${notificationId}, Email: ${email}`); // Log the action
-        alert(data);
-        location.reload(); // Refresh the page
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+    // Log the email and notification ID
+    console.log(`Email: ${email}, Notification ID: ${notificationId}`);
+
+    // Comment out the fetch call for now
+     fetch(`http://localhost:3000/notifications/${email}/${notificationId}`, {
+         method: 'PUT',
+         headers: {
+             'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({ is_read: true })
+     })
+     .then(response => response.text())
+     .then(data => {
+         console.log(`Marked as read: Notification ID: ${notificationId}, Email: ${email}`);
+         alert(data);
+         location.reload();
+     })
+     .catch(error => {
+         console.error('Error:', error);
+     });
 }
+
+
+
 
 function deleteNotification(notificationId) {
     console.log(`Attempting to delete notification with ID: ${notificationId}`); // Log the notification ID
