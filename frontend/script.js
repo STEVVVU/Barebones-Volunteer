@@ -322,8 +322,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-        const volunteerMatchingForm = document.getElementById('volunteer-matching-form');
-        volunteerMatchingForm.addEventListener('submit', function(event) {
+    const volunteerMatchingForm = document.getElementById('volunteer-matching-form');
+    volunteerMatchingForm.addEventListener('submit', function(event) {
         event.preventDefault();
 
         const email = document.getElementById('volunteer-name').value;
@@ -347,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Fetch volunteer history for a user
     function fetchVolunteerHistory(email) {
         fetch(`http://localhost:3000/history/${email}`)
         .then(response => response.json())
@@ -378,39 +377,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Fetch users and populate volunteer dropdown
-    fetch('http://localhost:3000/users')
-    .then(response => response.json())
-    .then(users => {
-        const volunteerNameSelect = document.getElementById('volunteer-name');
-        volunteerNameSelect.innerHTML = '<option>Select User</option>';
-        users.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.email;
-            option.textContent = user.email;
-            volunteerNameSelect.appendChild(option);
-        });
-    })
-    .catch(error => {
-        console.error('Error fetching users:', error);
-    });
+    function fetchNotifications(email) {
+        fetch(`http://localhost:3000/notifications/${email}`)
+        .then(response => response.json())
+        .then(notifications => {
+            const notificationList = document.getElementById('notification-list');
+            const notificationIndicator = document.getElementById('notification-indicator');
+            notificationList.innerHTML = '';
+            if (notifications.length > 0) {
+                notificationIndicator.style.display = 'inline';
+            } else {
+                notificationIndicator.style.display = 'none';
+            }
+            notifications.forEach(notification => {
+                const notificationItem = document.createElement('div');
+                notificationItem.classList.add('notification-item');
+                notificationItem.innerHTML = `
+                    <span class="notification-message">${notification.message}</span>
+                    <button class="delete-notification" data-notification-id="${notification.id}" data-email="${notification.email}">x</button>
+                `;
+                notificationList.appendChild(notificationItem);
+            });
 
-    // Fetch events and populate event dropdown
-    fetch('http://localhost:3000/events')
-    .then(response => response.json())
-    .then(events => {
-        const matchedEventSelect = document.getElementById('matched-event');
-        matchedEventSelect.innerHTML = '<option>Select Event</option>';
-        events.forEach(event => {
-            const option = document.createElement('option');
-            option.value = event.event_id;
-            option.textContent = event.event_name;
-            matchedEventSelect.appendChild(option);
+            // Re-bind delete notification buttons
+            document.querySelectorAll('.delete-notification').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    const notificationId = this.getAttribute('data-notification-id');
+                    const email = this.getAttribute('data-email');
+                    console.log(`Notification ID: ${notificationId}, Email: ${email}`); // Log the email value
+                    if (email !== '') {
+                        deleteNotification(notificationId);
+                    } else {
+                        markNotificationAsRead(email, notificationId);
+                    }
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching notifications:', error);
         });
-    })
-    .catch(error => {
-        console.error('Error fetching events:', error);
-    });
+    }
 
     function markNotificationAsRead(email, notificationId) {
         fetch(`http://localhost:3000/notifications/${email}/${notificationId}`, {
