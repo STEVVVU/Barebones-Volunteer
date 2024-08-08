@@ -85,7 +85,7 @@ router.get('/report/pdf', async (req, res) => {
     });
 });
 
-// Generate CSV report with custom formatting
+// Generate CSV report with basic formatting
 router.get('/report/csv', (req, res) => {
     const query = `
         SELECT u.email as volunteerName, e.event_name as eventName, v.date
@@ -100,27 +100,12 @@ router.get('/report/csv', (req, res) => {
             return res.status(500).send('Server error.');
         }
 
-        // Format date to be more readable
-        const formattedResults = results.map(row => ({
-            volunteerName: row.volunteerName,
-            eventName: row.eventName,
-            date: new Date(row.date).toLocaleString()
-        }));
+        const parser = new Parser();
+        const csv = parser.parse(results);
 
-        const fields = ['Volunteer Name', 'Event Name', 'Date'];
-        const opts = { fields, delimiter: ';' }; // Use semicolon as delimiter
-
-        try {
-            const parser = new Parser(opts);
-            const csv = parser.parse(formattedResults);
-
-            res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.csv');
-            res.setHeader('Content-Type', 'text/csv');
-            res.send(csv);
-        } catch (err) {
-            console.error('Error parsing CSV:', err);
-            res.status(500).send('Server error.');
-        }
+        res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.csv');
+        res.setHeader('Content-Type', 'text/csv');
+        res.send(csv);
     });
 });
 
