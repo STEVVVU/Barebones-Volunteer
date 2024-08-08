@@ -85,7 +85,7 @@ router.get('/report/pdf', async (req, res) => {
     });
 });
 
-// Generate CSV report with basic formatting
+// Generate CSV report with logging
 router.get('/report/csv', (req, res) => {
     const query = `
         SELECT u.email as volunteerName, e.event_name as eventName, v.date
@@ -100,12 +100,25 @@ router.get('/report/csv', (req, res) => {
             return res.status(500).send('Server error.');
         }
 
-        const parser = new Parser();
-        const csv = parser.parse(results);
+        console.log('Report data:', results); // Logging the fetched data
 
-        res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.csv');
-        res.setHeader('Content-Type', 'text/csv');
-        res.send(csv);
+        if (results.length === 0) {
+            console.warn('No data found for the CSV report.');
+            return res.status(404).send('No data found.');
+        }
+
+        try {
+            const parser = new Parser();
+            const csv = parser.parse(results);
+            console.log('Generated CSV:', csv); // Logging the generated CSV
+
+            res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.csv');
+            res.setHeader('Content-Type', 'text/csv');
+            res.send(csv);
+        } catch (err) {
+            console.error('Error parsing CSV:', err);
+            res.status(500).send('Server error.');
+        }
     });
 });
 
