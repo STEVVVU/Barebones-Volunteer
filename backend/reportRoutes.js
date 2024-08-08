@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
-const { PDFDocument, rgb } = require('pdf-lib');
+const { PDFDocument, StandardFonts } = require('pdf-lib');
 const { Parser } = require('json2csv');
 
 // Database connection
@@ -11,6 +11,25 @@ const db = mysql.createConnection({
     password: 'password12345',
     database: 'VolunteerManagement'
 });
+
+// Function to split text into lines
+function splitTextIntoLines(text, maxWidth, font, fontSize) {
+    const words = text.split(' ');
+    let lines = [];
+    let currentLine = '';
+
+    words.forEach((word) => {
+        const width = font.widthOfTextAtSize(`${currentLine} ${word}`, fontSize);
+        if (width < maxWidth) {
+            currentLine += ` ${word}`;
+        } else {
+            lines.push(currentLine.trim());
+            currentLine = word;
+        }
+    });
+    lines.push(currentLine.trim());
+    return lines;
+}
 
 // Generate PDF report
 router.get('/report/pdf', async (req, res) => {
@@ -29,19 +48,33 @@ router.get('/report/pdf', async (req, res) => {
 
         // Create PDF document
         const pdfDoc = await PDFDocument.create();
-        let page = pdfDoc.addPage();
-        const pageHeight = page.getHeight();
-        let y = pageHeight - 50;
-        page.drawText('Volunteer Activity Report', { x: 50, y: y, size: 18 });
+        const page = pdfDoc.addPage();
+        const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+        const pageWidth = page.getWidth();
+        const margin = 50;
+        const maxWidth = pageWidth - 2 * margin;
+        const fontSize = 12;
+
+        let y = page.getHeight() - 50;
+        page.drawText('Volunteer Activity Report', {
+            x: margin,
+            y: y,
+            size: 18,
+            font: timesRomanFont,
+        });
 
         y -= 30;
-        results.forEach((row, index) => {
-            if (y < 50) {
-                page = pdfDoc.addPage();
-                y = pageHeight - 50;
-            }
-            page.drawText(`Volunteer: ${row.volunteerName}, Event: ${row.eventName}, Date: ${row.date}`, { x: 50, y: y, size: 12 });
-            y -= 20;
+        results.forEach((row) => {
+            const text = `Volunteer: ${row.volunteerName}, Event: ${row.eventName}, Date: ${row.date}`;
+            const lines = splitTextIntoLines(text, maxWidth, timesRomanFont, fontSize);
+            lines.forEach((line) => {
+                if (y < 50) {
+                    page = pdfDoc.addPage();
+                    y = page.getHeight() - 50;
+                }
+                page.drawText(line, { x: margin, y: y, size: fontSize, font: timesRomanFont });
+                y -= 20;
+            });
         });
 
         const pdfBytes = await pdfDoc.save();
