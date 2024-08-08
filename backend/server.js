@@ -28,8 +28,17 @@ db.connect(err => {
 
 app.post('/register', (req, res) => {
     const { email, password } = req.body;
-    const saltRounds = 10;
+    
+    // Email and password validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        return res.status(400).send('Invalid email.');
+    }
+    if (!password || password.length < 6) {
+        return res.status(400).send('Password must be at least 6 characters long.');
+    }
 
+    const saltRounds = 10;
     bcrypt.hash(password, saltRounds, (err, hash) => {
         if (err) {
             return res.status(500).send('Server error.');
@@ -80,14 +89,15 @@ app.get('/profile/:email', (req, res) => {
     const query = 'SELECT * FROM UserProfile WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)';
     db.query(query, [email], (err, results) => {
         if (err) {
-            res.status(500).send('Server error.');
+            return res.status(500).send('Server error.');
         } else if (results.length === 0) {
-            res.status(404).send('User not found.');
+            return res.status(404).send('User not found.');
         } else {
             res.status(200).json(results[0]);
         }
     });
 });
+
 
 app.put('/profile/:email', (req, res) => {
     const { email } = req.params;
@@ -264,6 +274,7 @@ app.post('/match-volunteer', (req, res) => {
         });
     });
 });
+
 
 app.get('/history/:email', (req, res) => {
     const { email } = req.params;
