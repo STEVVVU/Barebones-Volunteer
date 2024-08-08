@@ -520,10 +520,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.fetchMatchingEvents = function() {
-        const volunteerEmail = document.getElementById('volunteer-name').value;
+    const volunteerEmail = document.getElementById('volunteer-name').value;
 
-        // Fetch events that match the volunteer's skills
-        fetch(`http://localhost:3000/matching-events/${volunteerEmail}`)
+    // Fetch events that match the volunteer's skills
+    fetch(`http://localhost:3000/matching-events/${volunteerEmail}`)
         .then(response => response.json())
         .then(events => {
             const matchedEventSelect = document.getElementById('matched-event');
@@ -537,26 +537,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Fetch events the user is already matched to
             fetch(`http://localhost:3000/user-matched-events/${volunteerEmail}`)
-            .then(response => response.json())
-            .then(matchedEvents => {
-                const alreadyMatchedEventIds = matchedEvents.map(event => event.event_id);
+                .then(response => response.json())
+                .then(matchedEvents => {
+                    const alreadyMatchedEventIds = matchedEvents.map(event => event.event_id);
 
-                // Disable options for events the user is already matched to
-                Array.from(matchedEventSelect.options).forEach(option => {
-                    if (alreadyMatchedEventIds.includes(parseInt(option.value))) {
-                        option.disabled = true;
-                        option.textContent += ' (Already Matched)';
-                    }
+                    // Disable options for events the user is already matched to
+                    Array.from(matchedEventSelect.options).forEach(option => {
+                        if (alreadyMatchedEventIds.includes(parseInt(option.value))) {
+                            option.disabled = true;
+                            option.textContent += ' (Already Matched)';
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching user matched events:', error);
                 });
-            })
-            .catch(error => {
-                console.error('Error fetching user matched events:', error);
-            });
         })
         .catch(error => {
             console.error('Error fetching matching events:', error);
         });
-    };
+};
 
     // Fetch users and populate volunteer dropdown
     fetch('http://localhost:3000/users')
