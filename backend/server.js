@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const mysql = require('mysql');
+const reportRoutes = require('./reportRoutes');
 
 const app = express();
 const port = 3000;
@@ -409,6 +410,8 @@ app.get('/matching-events/:email', (req, res) => {
         });
     });
 });
+
+app.use('/api', reportRoutes);
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
