@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
-const { PDFDocument } = require('pdf-lib');
+const { PDFDocument, rgb } = require('pdf-lib');
 const { Parser } = require('json2csv');
 
 // Database connection
@@ -29,11 +29,17 @@ router.get('/report/pdf', async (req, res) => {
 
         // Create PDF document
         const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage();
-        page.drawText('Volunteer Activity Report', { x: 50, y: 750, size: 18 });
+        let page = pdfDoc.addPage();
+        const pageHeight = page.getHeight();
+        let y = pageHeight - 50;
+        page.drawText('Volunteer Activity Report', { x: 50, y: y, size: 18 });
 
-        let y = 700;
-        results.forEach((row) => {
+        y -= 30;
+        results.forEach((row, index) => {
+            if (y < 50) {
+                page = pdfDoc.addPage();
+                y = pageHeight - 50;
+            }
             page.drawText(`Volunteer: ${row.volunteerName}, Event: ${row.eventName}, Date: ${row.date}`, { x: 50, y: y, size: 12 });
             y -= 20;
         });
