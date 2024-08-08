@@ -364,6 +364,52 @@ app.delete('/notifications/:id', (req, res) => {
     });
 });
 
+// Endpoint to fetch matching events for a volunteer
+app.get('/matching-events/:email', (req, res) => {
+    const email = req.params.email;
+
+    // Fetch user skills from the UserProfile table
+    const getUserSkillsQuery = `
+        SELECT skills 
+        FROM UserProfile 
+        WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)
+    `;
+
+    db.query(getUserSkillsQuery, [email], (err, results) => {
+        if (err) {
+            console.error('Error fetching user skills:', err);
+            return res.status(500).send('Server error.');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('User not found.');
+        }
+
+        console.log('User skills:', results[0].skills);
+        const skills = results[0].skills.split(',');
+
+        // Fetch events that match the user's skills
+        const getMatchingEventsQuery = `
+            SELECT * 
+            FROM EventDetails 
+            WHERE required_skills REGEXP ?
+        `;
+
+        const skillsRegex = skills.map(skill => `(${skill.trim()})`).join('|');
+        console.log('Skills regex:', skillsRegex);
+
+        db.query(getMatchingEventsQuery, [skillsRegex], (err, events) => {
+            if (err) {
+                console.error('Error fetching matching events:', err);
+                return res.status(500).send('Server error.');
+            }
+
+            console.log('Matching events:', events);
+            res.json(events);
+        });
+    });
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
