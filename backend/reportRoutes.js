@@ -53,7 +53,7 @@ router.get('/report/pdf', async (req, res) => {
         const pageWidth = page.getWidth();
         const margin = 50;
         const maxWidth = pageWidth - 2 * margin;
-        const fontSize = 12;
+        const fontSize = 10; // Decreased font size for volunteer details
 
         let y = page.getHeight() - 50;
         page.drawText('Volunteer Activity Report', {
