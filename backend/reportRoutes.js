@@ -101,8 +101,9 @@ router.get('/report/csv', (req, res) => {
         }
 
         // Format date to be more readable
-        results = results.map(row => ({
-            ...row,
+        const formattedResults = results.map(row => ({
+            volunteerName: row.volunteerName,
+            eventName: row.eventName,
             date: new Date(row.date).toLocaleString()
         }));
 
@@ -111,7 +112,7 @@ router.get('/report/csv', (req, res) => {
 
         try {
             const parser = new Parser(opts);
-            const csv = parser.parse(results);
+            const csv = parser.parse(formattedResults);
 
             res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.csv');
             res.setHeader('Content-Type', 'text/csv');
