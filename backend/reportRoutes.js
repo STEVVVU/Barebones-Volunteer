@@ -65,7 +65,7 @@ router.get('/report/pdf', async (req, res) => {
 
         y -= 30;
         results.forEach((row) => {
-            const text = `Volunteer: ${row.volunteerName}, Event: ${row.eventName}, Date: ${row.date}`;
+            const text = `Volunteer: ${row.volunteerName}, Event: ${row.eventName}, Date: ${new Date(row.date).toLocaleString()}`;
             const lines = splitTextIntoLines(text, maxWidth, timesRomanFont, fontSize);
             lines.forEach((line) => {
                 if (y < 50) {
@@ -85,7 +85,7 @@ router.get('/report/pdf', async (req, res) => {
     });
 });
 
-// Generate CSV report
+// Generate CSV report with custom formatting
 router.get('/report/csv', (req, res) => {
     const query = `
         SELECT u.email as volunteerName, e.event_name as eventName, v.date
@@ -100,12 +100,26 @@ router.get('/report/csv', (req, res) => {
             return res.status(500).send('Server error.');
         }
 
-        const parser = new Parser();
-        const csv = parser.parse(results);
+        // Format date to be more readable
+        results = results.map(row => ({
+            ...row,
+            date: new Date(row.date).toLocaleString()
+        }));
 
-        res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.csv');
-        res.setHeader('Content-Type', 'text/csv');
-        res.send(csv);
+        const fields = ['Volunteer Name', 'Event Name', 'Date'];
+        const opts = { fields, delimiter: ';' }; // Use semicolon as delimiter
+
+        try {
+            const parser = new Parser(opts);
+            const csv = parser.parse(results);
+
+            res.setHeader('Content-Disposition', 'attachment; filename=volunteer_report.csv');
+            res.setHeader('Content-Type', 'text/csv');
+            res.send(csv);
+        } catch (err) {
+            console.error('Error parsing CSV:', err);
+            res.status(500).send('Server error.');
+        }
     });
 });
 
