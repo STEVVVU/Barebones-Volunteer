@@ -300,7 +300,6 @@ app.delete('/events/:id', (req, res) => {
     });
 });
 
-// Match volunteer to event endpoint
 app.post('/match-volunteer', (req, res) => {
     const { email, eventId } = req.body;
     const participationStatus = req.body.participationStatus || 'Assigned'; // Default to 'Assigned' if not provided
@@ -347,10 +346,11 @@ app.post('/match-volunteer', (req, res) => {
                 // Insert volunteer history with event details
                 const insertQuery = `
                     INSERT INTO VolunteerHistory 
-                    (user_id, event_id, participation_status, event_name, event_description, location, required_skills, urgency, event_start_date, event_end_date)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (user_id, event_id, participation_status, date)
+                    VALUES (?, ?, ?, ?)
                 `;
-                db.query(insertQuery, [userId, eventId, participationStatus, event.event_name, event.description, event.location, event.required_skills, event.urgency, event.event_start_date, event.event_end_date], (err, insertResults) => {
+                const participationDate = new Date(); // Or use event-specific date if needed
+                db.query(insertQuery, [userId, eventId, participationStatus, participationDate], (err, insertResults) => {
                     if (err) {
                         console.error('Error inserting volunteer history:', err);
                         return res.status(500).send('Server error.');
@@ -381,6 +381,7 @@ app.post('/match-volunteer', (req, res) => {
         });
     });
 });
+
 
 // Get volunteer history for a user
 app.get('/history/:email', (req, res) => {
