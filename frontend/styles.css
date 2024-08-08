@@ -1,163 +1,260 @@
 /* General styles */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
+    line-height: 1.6;
     margin: 0;
     padding: 0;
-    color: #333;
-}
-
-.container {
-    width: 80%;
-    margin: auto;
-    padding: 20px;
-}
-
-h1 {
-    color: #007bff;
-}
-
-/* Content section styles */
-.content-section {
-    margin: 20px 0;
-    background: #fff;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Table styles */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #f2f2f2;
-}
-
-/* Button styles */
-button {
-    display: inline-block;
-    padding: 10px 20px;
-    margin: 10px 0;
-    font-size: 16px;
-    cursor: pointer;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-.skill-button, .date-button {
-    margin-right: 10px;
-    margin-top: 10px;
-    background-color: #6c757d;
-    color: #fff;
-}
-
-.skill-button:hover, .date-button:hover {
-    background-color: #5a6268;
-}
-
-/* Form styles */
-input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 5px 0 10px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-label {
-    margin-bottom: 5px;
-    display: block;
-    font-weight: bold;
-}
-
-textarea {
-    height: 100px;
-}
-
-/* Notification styles */
-.notification-item {
     display: flex;
-    justify-content: space-between;
-    background: #e9ecef;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-}
-
-.notification-message {
-    flex: 1;
-}
-
-.delete-notification {
-    background: #dc3545;
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    display: flex;
+    flex-direction: column;
     align-items: center;
+}
+
+nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: #333;
+    color: #fff;
+    padding: 10px 0;
+    display: flex;
     justify-content: center;
-    cursor: pointer;
-    font-size: 16px;
+    z-index: 1000;
 }
 
-.delete-notification:hover {
-    background: #c82333;
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
 }
 
-/* Dropdown styles */
-.dropdown {
+nav ul li {
+    margin: 0 15px;
     position: relative;
-    display: inline-block;
 }
 
-.dropdown-content {
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 15px;
+    display: block;
+    font-size: 16px;
+    transition: font-weight 0.15s ease, font-size 0.15s ease; /* Smooth transition for font-weight and font-size */
+}
+
+nav ul li a:hover {
+    font-weight: bold; /* Bold text on hover */
+    font-size: 18px; /* Slightly increase font size on hover */
+}
+
+nav ul li .dropdown-content {
     display: none;
     position: absolute;
     background-color: #f9f9f9;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    min-width: 200px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
+    right: 0;
 }
 
-.dropdown-content a {
+nav ul li .dropdown-content a {
     color: black;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
+    transition: font-weight 0.15s ease, font-size 0.15s ease; /* Smooth transition for font-weight and font-size */
 }
 
-.dropdown-content a:hover {
+nav ul li .dropdown-content a:hover {
+    font-weight: bold; /* Bold text on hover */
+    font-size: 18px; /* Slightly increase font size on hover */
     background-color: #f1f1f1;
 }
 
-.show {
+nav ul li:hover .dropdown-content {
     display: block;
 }
 
-/* Miscellaneous */
-#empty-message {
+.content-section {
+    display: none;
+    padding: 60px 20px;
+    margin-top: 50px;
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+label {
+    margin-bottom: 5px;
+}
+
+input, textarea, select, button {
+    margin-bottom: 15px;
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: none; /* Prevent resizing */
+}
+
+button {
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0; /* Add some margin to separate the table from other content */
+}
+
+th, td {
+    padding: 15px 20px; /* Add padding for spacing */
+    text-align: left;
+    border-bottom: 1px solid #ddd; /* Add a bottom border for row separation */
+}
+
+thead {
+    background: #f4f4f4; /* Add a background color to the header */
+    font-weight: bold; /* Make the header text bold */
+}
+
+#selected-skills, #selected-required-skills, #selected-dates, #selected-event-dates {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.skill-button, .date-button {
+    background-color: green;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.skill-button:hover, .date-button:hover {
+    background-color: red;
+}
+
+/* Centering the Volunteer History Section */
+#history {
     text-align: center;
-    font-style: italic;
-    color: #999;
+    width: 100%;
+}
+
+#history h1 {
+    text-align: center;
+}
+
+#history table {
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+#empty-message {
+    font-size: 1.2em;
+    color: #666;
+    margin-top: 20px;
+    text-align: center; /* Center the empty message */
+}
+
+#matched-event {
+    margin-bottom: 30px;
+}
+
+.notification-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.notification-message {
+    flex-grow: 1;
+    color: black;
+    margin-right: 10px;
+}
+
+.delete-notification {
+    background: none;
+    border: 2px solid red;
+    color: red;
+    border-radius: 50%;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.delete-notification:hover {
+    background-color: red;
+    color: white;
+}
+
+.dropdown-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+#notification-indicator {
+    font-size: 1.2em;
+    color: red;
+    vertical-align: middle;
+}
+
+/* Add responsive design */
+@media (max-width: 768px) {
+    #history-table th, #history-table td {
+        display: block;
+        text-align: right;
+    }
+
+    #history-table th::after, #history-table td::after {
+        content: ':';
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    #history-table th {
+        background-color: transparent;
+        text-align: left;
+    }
+
+    #history-table td {
+        padding: 10px 5px;
+        text-align: left;
+    }
 }
