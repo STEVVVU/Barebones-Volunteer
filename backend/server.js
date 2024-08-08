@@ -190,6 +190,46 @@ app.get('/logins', (req, res) => {
     });
 });
 
+app.get('/matching-events/:email', (req, res) => {
+    const email = req.params.email;
+
+    const getUserSkillsQuery = `
+        SELECT skills 
+        FROM UserProfile 
+        WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)
+    `;
+
+    db.query(getUserSkillsQuery, [email], (err, results) => {
+        if (err) {
+            console.error('Error fetching user skills:', err);
+            return res.status(500).send('Server error.');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('User not found.');
+        }
+
+        const skills = results[0].skills.split(',');
+
+        // Query to fetch events that match user skills
+        const getMatchingEventsQuery = `
+            SELECT * 
+            FROM EventDetails 
+            WHERE FIND_IN_SET(required_skills, ?)
+        `;
+
+        db.query(getMatchingEventsQuery, [skills.join(',')], (err, events) => {
+            if (err) {
+                console.error('Error fetching matching events:', err);
+                return res.status(500).send('Server error.');
+            }
+
+            res.json(events);
+        });
+    });
+});
+
+
 // Get all users endpoint
 app.get('/users', (req, res) => {
     const query = 'SELECT email FROM UserCredentials';
