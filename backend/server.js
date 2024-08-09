@@ -333,25 +333,42 @@ app.put('/notifications/:email/:id', (req, res) => {
 
 app.get('/user-matched-events/:email', (req, res) => {
     const { email } = req.params;
-    const getUserQuery = 'SELECT id FROM UserCredentials WHERE email = ?';
+    const getUserQuery = 'SELECT skills FROM UserProfile WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)';
 
-    db.query(getUserQuery, [email], (err, userResults) => {
-        if (userResults.length === 0) {
-            return res.status(404).send('User not found.');
+    db.query(getUserQuery, [email], (err, results) => {
+        if (err) {
+            console.error('Error fetching user profile:', err);
+            return res.status(500).send('Server error.');
         }
 
-        const userId = userResults[0].id;
+        if (results.length === 0 || !results[0].skills) {
+            console.warn('No skills found for this user.');
+            return res.status(404).send('No matching events found for this user.');
+        }
 
-        const matchedEventsQuery = 'SELECT event_id FROM VolunteerHistory WHERE user_id = ?';
-        db.query(matchedEventsQuery, [userId], (err, matchedEventsResults) => {
+        console.log('User skills:', results[0].skills);
+        const skills = results[0].skills ? results[0].skills.split(',') : [];
+
+        // Fetch events that match the user's skills
+        const getMatchingEventsQuery = `
+            SELECT * FROM EventDetails 
+            WHERE required_skills LIKE ?
+        `;
+        db.query(getMatchingEventsQuery, [`%${skills.join('%')}%`], (err, eventsResults) => {
             if (err) {
+                console.error('Error fetching matching events:', err);
                 return res.status(500).send('Server error.');
             }
 
-            return res.status(200).json(matchedEventsResults);
+            if (eventsResults.length === 0) {
+                return res.status(404).send('No matching events found for this user.');
+            }
+
+            res.status(200).json(eventsResults);
         });
     });
 });
+
 
 app.delete('/notifications/:id', (req, res) => {
     const { id } = req.params;
