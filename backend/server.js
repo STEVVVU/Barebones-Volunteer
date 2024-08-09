@@ -197,10 +197,11 @@ app.post('/match-volunteer', (req, res) => {
     const { email, eventId } = req.body;
     const participationStatus = req.body.participationStatus || 'Assigned';
 
+    // Fetch user ID based on the email provided
     const getUserQuery = 'SELECT id FROM UserCredentials WHERE email = ?';
     db.query(getUserQuery, [email], (err, userResults) => {
         if (err) {
-            return res.status(500).send('Server error.');
+            return res.status(500).send('Server error while fetching user ID.');
         }
 
         if (userResults.length === 0) {
@@ -209,51 +210,51 @@ app.post('/match-volunteer', (req, res) => {
 
         const userId = userResults[0].id;
 
+        // Check if the user is already matched to the specific event
         const checkMatchQuery = 'SELECT * FROM VolunteerHistory WHERE user_id = ? AND event_id = ?';
         db.query(checkMatchQuery, [userId, eventId], (err, matchResults) => {
             if (err) {
-                return res.status(500).send('Server error.');
+                return res.status(500).send('Server error while checking existing match.');
             }
 
             if (matchResults.length > 0) {
                 return res.status(400).send('User is already matched to this event.');
             }
 
+            // Fetch event details
             const eventQuery = 'SELECT * FROM EventDetails WHERE event_id = ?';
             db.query(eventQuery, [eventId], (err, eventResults) => {
                 if (err) {
-                    return res.status(500).send('Server error.');
+                    return res.status(500).send('Server error while fetching event details.');
                 }
 
                 if (eventResults.length === 0) {
                     return res.status(404).send('Event not found.');
                 }
 
-                const event = eventResults[0];
-
                 const insertQuery = `
                     INSERT INTO VolunteerHistory 
                     (user_id, event_id, participation_status, date)
                     VALUES (?, ?, ?, ?)
                 `;
-                const participationDate = new Date(); 
+                const participationDate = new Date(); // Use the current date as the participation date
                 db.query(insertQuery, [userId, eventId, participationStatus, participationDate], (err, insertResults) => {
                     if (err) {
-                        return res.status(500).send('Server error.');
+                        return res.status(500).send('Server error while inserting volunteer history.');
                     }
 
-                    const notificationMessage = `You have been matched to the event "${event.event_name}".`;
+                    const notificationMessage = `You have been matched to the event "${eventResults[0].event_name}".`;
                     const notificationQuery = 'INSERT INTO Notifications (email, message) VALUES (?, ?)';
                     db.query(notificationQuery, [email, notificationMessage], (err, notificationResults) => {
                         if (err) {
-                            return res.status(500).send('Server error.');
+                            return res.status(500).send('Server error while creating notification.');
                         }
 
                         const notificationId = notificationResults.insertId;
                         const userNotificationQuery = 'INSERT INTO UserNotifications (user_id, notification_id) VALUES (?, ?)';
                         db.query(userNotificationQuery, [userId, notificationId], (err, userNotificationResults) => {
                             if (err) {
-                                return res.status(500).send('Server error.');
+                                return res.status(500).send('Server error while linking notification to user.');
                             }
 
                             return res.status(201).send('Volunteer matched and notified successfully.');
