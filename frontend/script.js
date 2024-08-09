@@ -573,6 +573,67 @@ function deleteNotification(notificationId) {
     });
     };
 
+  document.getElementById('download-pdf').addEventListener('click', function() {
+        // Retrieve the account name and replace spaces with underscores
+        let accountName = document.getElementById('full-name').value || "volunteer";
+        accountName = accountName.replace(/\s+/g, '_');
+    
+        // Collect the data from the table
+        const rows = [];
+        document.querySelectorAll('#history-table tbody tr').forEach(row => {
+            const rowData = [];
+            row.querySelectorAll('td').forEach(cell => rowData.push(cell.innerText));
+            rows.push(rowData);
+        });
+    
+        // Create a new jsPDF instance
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+    
+        // Define the table column headers
+        const columns = ["Event Name", "Event Description", "Location", "Required Skills", "Urgency", "Event Date", "Participation Status"];
+    
+        // Add the table to the PDF
+        doc.autoTable({
+            head: [columns],
+            body: rows,
+        });
+    
+        // Save the PDF with the customized file name
+        const fileName = `${accountName}_volunteer_history.pdf`;
+        doc.save(fileName);
+    });
+    
+    document.getElementById('download-csv').addEventListener('click', function() {
+        // Retrieve the account name and replace spaces with underscores
+        let accountName = document.getElementById('full-name').value || "volunteer";
+        accountName = accountName.replace(/\s+/g, '_');
+    
+        // Define the table column headers
+        const columns = ["Event Name", "Event Description", "Location", "Required Skills", "Urgency", "Event Date", "Participation Status"];
+        
+        // Collect the data from the table
+        const rows = [];
+        document.querySelectorAll('#history-table tbody tr').forEach(row => {
+            const rowData = [];
+            row.querySelectorAll('td').forEach(cell => rowData.push(cell.innerText));
+            rows.push(rowData.join(','));
+        });
+    
+        // Combine the column headers and rows into a single CSV string
+        const csvContent = [columns.join(','), ...rows].join('\n');
+    
+        // Create a blob and download it as a CSV file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${accountName}_volunteer_history.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
 
 
   // Fetch users and populate volunteer dropdown
