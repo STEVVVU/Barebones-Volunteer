@@ -197,11 +197,10 @@ app.post('/match-volunteer', (req, res) => {
     const { email, eventId } = req.body;
     const participationStatus = req.body.participationStatus || 'Assigned';
 
-    // Fetch user ID based on the email provided
     const getUserQuery = 'SELECT id FROM UserCredentials WHERE email = ?';
     db.query(getUserQuery, [email], (err, userResults) => {
         if (err) {
-            return res.status(500).send('Server error while fetching user ID.');
+            return res.status(500).send('Server error.');
         }
 
         if (userResults.length === 0) {
@@ -210,51 +209,51 @@ app.post('/match-volunteer', (req, res) => {
 
         const userId = userResults[0].id;
 
-        // Check if the user is already matched to the specific event
         const checkMatchQuery = 'SELECT * FROM VolunteerHistory WHERE user_id = ? AND event_id = ?';
         db.query(checkMatchQuery, [userId, eventId], (err, matchResults) => {
             if (err) {
-                return res.status(500).send('Server error while checking existing match.');
+                return res.status(500).send('Server error.');
             }
 
             if (matchResults.length > 0) {
                 return res.status(400).send('User is already matched to this event.');
             }
 
-            // Fetch event details
             const eventQuery = 'SELECT * FROM EventDetails WHERE event_id = ?';
             db.query(eventQuery, [eventId], (err, eventResults) => {
                 if (err) {
-                    return res.status(500).send('Server error while fetching event details.');
+                    return res.status(500).send('Server error.');
                 }
 
                 if (eventResults.length === 0) {
                     return res.status(404).send('Event not found.');
                 }
 
+                const event = eventResults[0];
+
                 const insertQuery = `
                     INSERT INTO VolunteerHistory 
                     (user_id, event_id, participation_status, date)
                     VALUES (?, ?, ?, ?)
                 `;
-                const participationDate = new Date(); // Use the current date as the participation date
+                const participationDate = new Date(); 
                 db.query(insertQuery, [userId, eventId, participationStatus, participationDate], (err, insertResults) => {
                     if (err) {
-                        return res.status(500).send('Server error while inserting volunteer history.');
+                        return res.status(500).send('Server error.');
                     }
 
-                    const notificationMessage = `You have been matched to the event "${eventResults[0].event_name}".`;
+                    const notificationMessage = `You have been matched to the event "${event.event_name}".`;
                     const notificationQuery = 'INSERT INTO Notifications (email, message) VALUES (?, ?)';
                     db.query(notificationQuery, [email, notificationMessage], (err, notificationResults) => {
                         if (err) {
-                            return res.status(500).send('Server error while creating notification.');
+                            return res.status(500).send('Server error.');
                         }
 
                         const notificationId = notificationResults.insertId;
                         const userNotificationQuery = 'INSERT INTO UserNotifications (user_id, notification_id) VALUES (?, ?)';
                         db.query(userNotificationQuery, [userId, notificationId], (err, userNotificationResults) => {
                             if (err) {
-                                return res.status(500).send('Server error while linking notification to user.');
+                                return res.status(500).send('Server error.');
                             }
 
                             return res.status(201).send('Volunteer matched and notified successfully.');
@@ -334,42 +333,25 @@ app.put('/notifications/:email/:id', (req, res) => {
 
 app.get('/user-matched-events/:email', (req, res) => {
     const { email } = req.params;
-    const getUserQuery = 'SELECT skills FROM UserProfile WHERE user_id = (SELECT id FROM UserCredentials WHERE email = ?)';
+    const getUserQuery = 'SELECT id FROM UserCredentials WHERE email = ?';
 
-    db.query(getUserQuery, [email], (err, results) => {
-        if (err) {
-            console.error('Error fetching user profile:', err);
-            return res.status(500).send('Server error.');
+    db.query(getUserQuery, [email], (err, userResults) => {
+        if (userResults.length === 0) {
+            return res.status(404).send('User not found.');
         }
 
-        if (results.length === 0 || !results[0].skills) {
-            console.warn('No skills found for this user.');
-            return res.status(404).send('No matching events found for this user.');
-        }
+        const userId = userResults[0].id;
 
-        console.log('User skills:', results[0].skills);
-        const skills = results[0].skills ? results[0].skills.split(',') : [];
-
-        // Fetch events that match the user's skills
-        const getMatchingEventsQuery = `
-            SELECT * FROM EventDetails 
-            WHERE required_skills LIKE ?
-        `;
-        db.query(getMatchingEventsQuery, [`%${skills.join('%')}%`], (err, eventsResults) => {
+        const matchedEventsQuery = 'SELECT event_id FROM VolunteerHistory WHERE user_id = ?';
+        db.query(matchedEventsQuery, [userId], (err, matchedEventsResults) => {
             if (err) {
-                console.error('Error fetching matching events:', err);
                 return res.status(500).send('Server error.');
             }
 
-            if (eventsResults.length === 0) {
-                return res.status(404).send('No matching events found for this user.');
-            }
-
-            res.status(200).json(eventsResults);
+            return res.status(200).json(matchedEventsResults);
         });
     });
 });
-
 
 app.delete('/notifications/:id', (req, res) => {
     const { id } = req.params;
