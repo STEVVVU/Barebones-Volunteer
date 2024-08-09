@@ -13,21 +13,22 @@
     <!-- Navigation Bar -->
     <nav>
         <ul>
-            <li><a href="#login" onclick="showSection('login')">Login</a></li>
-            <li><a href="#register" onclick="showSection('register')">Register</a></li>
-            <li><a href="#profile" onclick="showSection('profile')">Profile</a></li>
-            <li><a href="#event-management" onclick="showSection('event-management')">Event Management</a></li>
-            <li><a href="#events" onclick="showSection('events')">Events</a></li>
-            <li><a href="#volunteer-matching" onclick="showSection('volunteer-matching')">Volunteer Matching</a></li>
-            <li><a href="#history" onclick="showSection('history')">History</a></li>
-            <li class="dropdown">
+            <li class="login-register"><a href="#login" onclick="showSection('login')">Login</a></li>
+            <li class="login-register"><a href="#register" onclick="showSection('register')">Register</a></li>
+            <li class="logged-in-only"><a href="#profile" onclick="showSection('profile')">Profile</a></li>
+            <li class="logged-in-only"><a href="#event-management" onclick="showSection('event-management')">Event Management</a></li>
+            <li class="logged-in-only"><a href="#events" onclick="showSection('events')">Events</a></li>
+            <li class="logged-in-only"><a href="#volunteer-matching" onclick="showSection('volunteer-matching')">Volunteer Matching</a></li>
+            <li class="logged-in-only"><a href="#history" onclick="showSection('history')">History</a></li>
+            <li class="dropdown logged-in-only">
                 <a href="#" class="dropbtn">Notifications <span id="notification-indicator" style="display:none;">🔴</span></a>
-                <div class="dropdown-content" id="notification-list">
-                    <!-- Notification items will be dynamically added here -->
-                </div>
+                <div class="dropdown-content" id="notification-list"></div>
             </li>
+            <li><a href="#" id="logout-button" onclick="logout()">Logout</a></li>
         </ul>
     </nav>
+    
+    
 
     <!-- Sections -->
     <section id="login" class="content-section">

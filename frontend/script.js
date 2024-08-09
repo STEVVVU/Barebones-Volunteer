@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
       dropdownContent.classList.toggle('show');
   });
 
+  
+
   window.onclick = function(event) {
       if (!event.target.matches('.dropbtn')) {
           const dropdowns = document.getElementsByClassName("dropdown-content");
@@ -131,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
           alert('Please select both start and end dates.');
       }
   });
+
 
   window.showSection = function(sectionId) {
       const sections = document.querySelectorAll('.content-section');
@@ -652,6 +655,29 @@ function deleteNotification(notificationId) {
   });
 
   const email = localStorage.getItem('email');
+
+  if (email) {
+    // User is logged in, hide login and register links
+    document.querySelectorAll('.login-register').forEach(link => {
+        link.style.display = 'none';
+    });
+
+    // Show the sections only available to logged-in users
+    document.getElementById('logout-button').style.display = 'block';
+    document.querySelectorAll('.logged-in-only').forEach(link => {
+        link.style.display = 'block';
+    });
+
+} else {
+    // User is not logged in, hide the logout button
+    document.getElementById('logout-button').style.display = 'none';
+
+    // Hide the sections only available to logged-in users
+    document.querySelectorAll('.logged-in-only').forEach(link => {
+        link.style.display = 'none';
+    });
+}
+
   if (email) {
       fetchProfile(email);
       fetchNotifications(email);
@@ -663,3 +689,10 @@ function deleteNotification(notificationId) {
       showSection('login'); // Show login section if not logged in
   }
 });
+
+function logout() {
+    // Clear the localStorage and redirect to the login section
+    localStorage.removeItem('email');
+    showSection('login');
+    location.reload(); // Refresh the page to reset the UI
+}
